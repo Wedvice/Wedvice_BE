@@ -7,20 +7,26 @@ plugins {
 group = 'com'
 version = '0.0.1-SNAPSHOT'
 
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
-}
-
 repositories {
 	mavenCentral()
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter'
+	// ✅ Spring Boot 웹 기능
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// ✅ Spring Security (OAuth2 로그인 기능 포함)
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+	// ✅ Thymeleaf (웹 페이지 렌더링용, 선택사항)
+	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+
+	// ✅ 테스트용 의존성
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.springframework.security:spring-security-test'
+
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 }
 
 tasks.named('test') {
