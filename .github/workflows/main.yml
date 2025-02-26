@@ -38,7 +38,7 @@ jobs:
       - name: Get JAR filename
         id: get_jar
         run: |
-          JAR_NAME=$(ls build/libs/gaia-*.jar | grep -v plain | head -n 1)
+          JAR_NAME=$(ls build/libs/wedivce-*.jar | grep -v plain | head -n 1)
           echo "JAR_NAME=$JAR_NAME" >> $GITHUB_ENV
 
       # 6️⃣ Docker Hub 로그인 (Personal Access Token 사용)
@@ -51,12 +51,12 @@ jobs:
       # 7️⃣ Docker 이미지 빌드 및 태깅
       - name: Build and tag Docker image
         run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/gaia-app:latest .
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/wedvice-app:latest .
 
       # 8️⃣ Docker Hub에 푸시
       - name: Push Docker image to Docker Hub
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/gaia-app:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/wedvice-app:latest
 
       # 9️⃣ EC2에 Docker Compose 파일 전송
       - name: Upload Docker Compose file to EC2
@@ -77,13 +77,13 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             # 기존 컨테이너 종료
-            docker stop gaia-app || true
-            docker rm gaia-app || true
-            docker stop gaia-db || true
-            docker rm gaia-db || true
+            docker stop wedvice-app || true
+            docker rm wedvice-app || true
+            docker stop wedvice-db || true
+            docker rm wedvice-db || true
 
             # 최신 이미지 가져오기
-            docker pull ${{ secrets.DOCKER_USERNAME }}/gaia-app:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/wedvice-app:latest
 
             # Docker Compose 실행
             docker-compose -f /home/ubuntu/docker-compose.yml up -d
