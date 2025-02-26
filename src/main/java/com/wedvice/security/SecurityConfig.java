@@ -1,6 +1,7 @@
 package com.wedvice.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wedvice.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +17,12 @@ import java.util.Map;
 @Configuration
 public class SecurityConfig {
 
+    private final UserService userService;
+
+    public SecurityConfig(UserService userService) {
+        this.userService = userService;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -29,24 +36,34 @@ public class SecurityConfig {
                 }))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll() // 인증 필요 없는 경로
-                        .anyRequest().authenticated()           // 그 외는 인증 필요
+                        .requestMatchers("/auth/**").permitAll()
+                        .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .successHandler((request, response, authentication) -> {
-                            // ✅ 로그인 성공 시 React 페이지로 리디렉트
                             OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
                             System.out.println("✅ 로그인 성공: " + oauth2User.getAttributes());
 
-                            response.sendRedirect("http://localhost:5173/dashboard");  // ✅ React 대시보드로 리디렉트
+                            // ✅ 카카오 사용자 정보 추출
+                            Map<String, Object> kakaoAccount = (Map<String, Object>) oauth2User.getAttributes().get("kakao_account");
+                            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+
+                            String oauthId = oauth2User.getAttribute("id").toString();
+                            String provider = "kakao";
+
+                            String nickname = profile.get("nickname") != null ? profile.get("nickname").toString() : null;
+                            String profileImageUrl = profile.get("profile_image_url") != null ? profile.get("profile_image_url").toString() : null;
+
+                            // ✅ DB에 사용자 정보 저장 (이미 있으면 무시)
+                            userService.saveOrGetUser(oauthId, provider, nickname, profileImageUrl);
+
+                            // ✅ React 대시보드로 리디렉트
+                            response.sendRedirect("http://localhost:5173/dashboard");
                         })
                         .failureHandler((request, response, exception) -> {
-                            // ❌ 로그인 실패 시 React 로그인 페이지로 리디렉트
                             System.out.println("❌ 로그인 실패: " + exception.getLocalizedMessage());
-
-                            response.sendRedirect("http://localhost:5173/login");  // ❌ React 로그인 페이지로 리디렉트
+                            response.sendRedirect("http://localhost:5173/login");
                         })
-
                 )
                 .logout(logout -> logout
                         .logoutUrl("/auth/logout")
@@ -56,7 +73,7 @@ public class SecurityConfig {
                             response.setCharacterEncoding("UTF-8");
                             Map<String, Object> result = new HashMap<>();
                             result.put("message", "로그아웃 성공");
-                            result.put("isLoggedIn", false); // ✅ 클라이언트와 맞춤
+                            result.put("isLoggedIn", false);
                             new ObjectMapper().writeValue(response.getWriter(), result);
                         })
                 );
