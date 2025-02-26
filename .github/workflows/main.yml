@@ -9,6 +9,21 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: wedvice-db
+          POSTGRES_USER: wedviceuser
+          POSTGRES_PASSWORD: wedvicepass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       # 1️⃣ 리포지토리 체크아웃
       - name: Checkout Repository
