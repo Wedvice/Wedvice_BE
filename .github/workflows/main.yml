@@ -9,8 +9,23 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_DB: wedvice-db
+          POSTGRES_USER: wedviceuser
+          POSTGRES_PASSWORD: wedvicepass
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      # 1️⃣ GitHub 리포지토리 체크아웃
+      # 1️⃣ 리포지토리 체크아웃
       - name: Checkout Repository
         uses: actions/checkout@v2
 
@@ -21,27 +36,30 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # 3️⃣ 빌드 실행 (Docker DB 사용)
+      # 3️⃣ Gradle 실행 권한 부여
+      - name: Ensure gradlew is executable
+        run: chmod +x gradlew
+
+      # 4️⃣ Gradle 빌드
       - name: Build with Gradle
         run: |
-          docker-compose up -d
           ./gradlew clean build
-          docker-compose down
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/wedvice-db
+          SPRING_DATASOURCE_USERNAME: wedviceuser
+          SPRING_DATASOURCE_PASSWORD: wedvicepass
 
-      # 4️⃣ Docker Hub 로그인
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+      # 5️⃣ 빌드된 파일, Dockerfile, docker-compose.yml EC2로 전송
+      - name: Upload build files to EC2
+        uses: appleboy/scp-action@master
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "build/libs/*.jar,Dockerfile,docker-compose.yml"
+          target: "/home/ubuntu/app"
 
-      # 5️⃣ Docker 이미지 빌드 및 Docker Hub에 푸시
-      - name: Build and Push Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/wedvice-app:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/wedvice-app:latest
-
-      # 6️⃣ EC2에서 Docker 이미지 Pull 및 실행 (RDS 연결)
+      # 6️⃣ EC2에서 Docker 빌드 및 컨테이너 실행
       - name: SSH to EC2 and Deploy
         uses: appleboy/ssh-action@master
         with:
@@ -49,11 +67,10 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker stop wedvice-app || true
-            docker rm wedvice-app || true
-            docker pull ${{ secrets.DOCKER_USERNAME }}/wedvice-app:latest
-            docker run -d -p 8080:8080 \
-              -e SPRING_DATASOURCE_URL=jdbc:postgresql://${{ secrets.RDS_ENDPOINT }}:5432/wedvice-db \
-              -e SPRING_DATASOURCE_USERNAME=wedviceuser \
-              -e SPRING_DATASOURCE_PASSWORD=wedvicepass \
-              ${{ secrets.DOCKER_USERNAME }}/wedvice-app:latest
+            cd /home/ubuntu/app
+            # 기존 컨테이너 중지 및 제거
+            docker-compose down || true
+            docker system prune -f
+
+            # Docker 빌드 및 실행
+            docker-compose up -d --build

@@ -1,21 +1,8 @@
 version: '3'
 services:
-  app:
+  wedvice-app:
     build: .
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/wedvice-db
-      SPRING_DATASOURCE_USERNAME: wedviceuser
-      SPRING_DATASOURCE_PASSWORD: wedvicepass
-    depends_on:
-      - db  # 📌 DB가 실행된 후에 app이 실행되도록 설정
-
-  db:
-    image: postgres:15
-    ports:
-      - "5432:5432"
-    environment:  # 📌 DB 생성 및 초기화 설정
-      POSTGRES_DB: wedvice-db
-      POSTGRES_USER: wedviceuser
-      POSTGRES_PASSWORD: wedvicepass
+      DB_HOST: ${RDS_ENDPOINT}
