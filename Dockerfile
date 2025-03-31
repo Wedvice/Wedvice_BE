@@ -5,7 +5,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # 3️⃣ JAR 파일 복사
-COPY build/libs/*.jar app.jar
+COPY build/libs/wedvice-0.0.1-SNAPSHOT.jar app.jar
 
 # 4️⃣ 8080 포트 노출
 EXPOSE 8080
