@@ -22,4 +22,10 @@ public class CoupleService {
         couple.setWeddingDate(LocalDate.parse(weddingDate));
         coupleRepository.save(couple);
     }
+
+    @Transactional(readOnly = true)
+    public Couple getCouple(Long coupleId) {
+        return coupleRepository.findById(coupleId)
+                .orElseThrow(() -> new RuntimeException("커플 정보를 찾을 수 없습니다."));
+    }
 }

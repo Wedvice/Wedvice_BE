@@ -1,5 +1,6 @@
 package com.wedvice.controller;
 
+import com.wedvice.entity.User;
 import com.wedvice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -46,5 +47,13 @@ public class UserController {
 
         userService.updateMatchedUserAndCreateCouple(userId, matchedUserId);
         return ResponseEntity.ok("매칭된 사용자 정보가 양방향으로 업데이트되고 커플이 생성되었습니다.");
+    }
+
+    @GetMapping("/{userId}")
+    @Operation(summary = "👀 사용자 정보 조회", description = "지정된 사용자 ID로 사용자 정보를 조회합니다.")
+    public ResponseEntity<User> getUser(
+            @Parameter(description = "조회할 사용자 ID", example = "1") @PathVariable Long userId) {
+        User user = userService.getUser(userId);
+        return ResponseEntity.ok(user);
     }
 }
