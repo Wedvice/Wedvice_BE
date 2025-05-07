@@ -1,13 +1,20 @@
 package com.wedvice.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wedvice.entity.User;
+import com.wedvice.security.login.ExceptionHandlingFilter;
+import com.wedvice.security.login.JwtAuthenticationFilter;
+import com.wedvice.security.login.JwtTokenProvider;
 import com.wedvice.service.UserService;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
 import java.util.HashMap;
@@ -15,12 +22,19 @@ import java.util.List;
 import java.util.Map;
 
 @Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ExceptionHandlingFilter exceptionHandlingFilter;
 
-    public SecurityConfig(UserService userService) {
+    public SecurityConfig(UserService userService, JwtTokenProvider jwtTokenProvider, JwtAuthenticationFilter jwtAuthenticationFilter, ExceptionHandlingFilter exceptionHandlingFilter) {
         this.userService = userService;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.exceptionHandlingFilter = exceptionHandlingFilter;
     }
 
     @Bean
@@ -35,8 +49,10 @@ public class SecurityConfig {
                     return config;
                 }))
                 .csrf(csrf -> csrf.disable())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(exceptionHandlingFilter, JwtAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**","/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/", "/login/**", "/oauth2/**", "/login/oauth2/**", "/css/**", "/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -55,14 +71,33 @@ public class SecurityConfig {
                             String profileImageUrl = profile.get("profile_image_url") != null ? profile.get("profile_image_url").toString() : null;
 
                             // ✅ DB에 사용자 정보 저장 (이미 있으면 무시)
-                            userService.saveOrGetUser(oauthId, provider, nickname, profileImageUrl);
+                            User user = userService.saveOrGetUser(oauthId, provider, nickname, profileImageUrl);
+                            // ✅ JWT 생성
+                            String accessToken = jwtTokenProvider.generateAccessToken(user.getId().toString(), user.getOauthId());
+                            String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(), user.getOauthId());
+                            userService.touchRefreshToken(refreshToken, user.getId());
+
+                            // ✅ JWT를 HttpOnly 쿠키에 저장 (클라이언트 JS에서 접근 불가)
+                            Cookie accessCookie = new Cookie("accessToken", accessToken);
+                            accessCookie.setHttpOnly(true);
+                            accessCookie.setPath("/");
+                            accessCookie.setMaxAge(60 * 30); // 30분
+
+                            Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+                            refreshCookie.setHttpOnly(true);
+                            refreshCookie.setPath("/");
+                            refreshCookie.setMaxAge(60 * 60 * 24 * 14); // 14일
+
+                            response.addCookie(accessCookie);
+                            response.addCookie(refreshCookie);
+
 
                             // ✅ React 대시보드로 리디렉트
-                            response.sendRedirect("http://localhost:5173/dashboard");
+                            response.sendRedirect("http://localhost:3000/Redirection");
                         })
                         .failureHandler((request, response, exception) -> {
                             System.out.println("❌ 로그인 실패: " + exception.getLocalizedMessage());
-                            response.sendRedirect("http://localhost:5173/login");
+                            response.sendRedirect("http://localhost:3000/Redirection");
                         })
                 )
                 .logout(logout -> logout
@@ -80,4 +115,6 @@ public class SecurityConfig {
 
         return http.build();
     }
+
+
 }

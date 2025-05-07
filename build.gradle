@@ -1,44 +1,48 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.4.2'
-	id 'io.spring.dependency-management' version '1.1.7'
+    id 'java'
+    id 'org.springframework.boot' version '3.4.2'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com'
 version = '0.0.1-SNAPSHOT'
 
 repositories {
-	mavenCentral()
+    mavenCentral()
 }
 
 dependencies {
-	// ✅ Spring Boot 웹 기능
-	implementation 'org.springframework.boot:spring-boot-starter-web'
+    // ✅ Spring Boot 웹 기능
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	// ✅ Spring Security (OAuth2 로그인 기능 포함)
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    // ✅ Spring Security (OAuth2 로그인 기능 포함)
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 
-	// ✅ Thymeleaf (웹 페이지 렌더링용, 선택사항)
-	implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    // ✅ Thymeleaf (웹 페이지 렌더링용, 선택사항)
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
 
-	// ✅ 테스트용 의존성
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
+    // ✅ 테스트용 의존성
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
 
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
 
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
-	// ✅ PostgreSQL 드라이버 - PostgreSQL DB 연결
-	runtimeOnly 'org.postgresql:postgresql'
+    // ✅ PostgreSQL 드라이버 - PostgreSQL DB 연결
+    runtimeOnly 'org.postgresql:postgresql'
 
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly('io.jsonwebtoken:jjwt-jackson:0.11.5') // JSON 파싱을 위한 Jackson 바인딩
 
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
 }
 
 tasks.named('test') {
-	useJUnitPlatform()
+    useJUnitPlatform()
 }

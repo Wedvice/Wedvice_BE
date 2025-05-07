@@ -38,6 +38,9 @@ public class User {
     @Column(nullable = true)  // ✅ 메모 필드 (nullable)
     private String memo;
 
+    @Column(nullable = true)
+    private String refreshToken;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -49,4 +52,9 @@ public class User {
 
     @OneToMany(mappedBy = "bride")
     private List<Couple> brideCouples;
+
+    public void updateRefreshToken(String newRefreshToken) {
+        //  토큰 저장.
+        this.refreshToken = refreshToken;
+    }
 }
