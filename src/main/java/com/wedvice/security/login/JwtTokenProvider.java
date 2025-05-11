@@ -47,7 +47,6 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody();
         ((Map) claims).forEach((a, b) -> {
-            System.out.println(a + " : " + b);
         });
         return claims.get("username", String.class); // username을 따로 넣은 경우
     }
@@ -87,11 +86,9 @@ public class JwtTokenProvider {
 
     public boolean validateToken(String token) {
         try {
-            System.out.println("validateToken token:" + token);
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (IllegalArgumentException | JwtException e) {
-            System.out.println("에러발생 : " + e.getClass());
             return false;
         }
     }

@@ -20,7 +20,6 @@ public class TestController {
 
     @GetMapping("/login")
     public String login() {
-        System.out.println("123");
         return "<h1>로그인 페이지</h1><a href='/oauth2/authorization/kakao'>카카오 로그인</a>";
     }
 }

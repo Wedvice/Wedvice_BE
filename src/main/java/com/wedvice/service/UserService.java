@@ -1,6 +1,7 @@
 package com.wedvice.service;
 
 import com.wedvice.dto.TokenResponseDto;
+import com.wedvice.dto.UserDto;
 import com.wedvice.entity.Couple;
 import com.wedvice.entity.User;
 import com.wedvice.repository.CoupleRepository;
@@ -105,7 +106,6 @@ public class UserService {
             User user = userRepository.getReferenceById(Long.parseLong(uid));
 
             String savedRefreshToken = user.getRefreshToken();
-
             if (!savedRefreshToken.equals(refreshToken)) {
                 throw new IllegalArgumentException("리프래쉬 토큰이 일치하지 않습니다.");
             }
@@ -163,8 +163,19 @@ public class UserService {
 
     @Transactional
     public void touchRefreshToken(String refreshToken, Long id) {
-        System.out.println("[touchRefreshToken] 실행");
         userRepository.updateRefreshToken(id, refreshToken);
+    }
+
+    public UserDto getUserInfo(Long userId) {
+        User user = userRepository.getReferenceById(userId);
+        UserDto userDto = UserDto.builder()
+                .id(user.getId())
+                .memo(user.getMemo())
+                .nickname(user.getNickname())
+                .profileImageUrl(user.getProfileImageUrl())
+                .createdAt(user.getCreatedAt())
+                .build();
+        return userDto;
     }
 }
 

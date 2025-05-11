@@ -44,10 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
         String requestURI = request.getRequestURI();
-        System.out.println("uri:" + requestURI);
         if (!isWhiteListed(requestURI)) {
             // 화이트리스트가 아니면 JWT 검사
-            System.out.println("is valid: " + tokenProvider.validateToken(token));
             if (token == null || !tokenProvider.validateToken(token)) {
                 throw new JwtAuthenticationException("Invalid or expired token");
             }
