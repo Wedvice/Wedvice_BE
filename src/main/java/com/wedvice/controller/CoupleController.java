@@ -1,6 +1,9 @@
 package com.wedvice.controller;
 
+import com.wedvice.dto.MatchRequestDto;
 import com.wedvice.entity.Couple;
+import com.wedvice.security.login.CustomUserDetails;
+import com.wedvice.security.login.LoginUser;
 import com.wedvice.service.CoupleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,6 +34,13 @@ public class CoupleController {
 
         coupleService.updateWeddingDate(coupleId, weddingDate);
         return ResponseEntity.ok("결혼 날짜가 업데이트되었습니다.");
+    }
+
+    @PostMapping("/match")
+    public ResponseEntity<?> math(@RequestBody MatchRequestDto request, @LoginUser CustomUserDetails loginUser) {
+        long userId = loginUser.getUserId();
+        coupleService.matchCouple(userId, request.getMatchCode());
+        return ResponseEntity.ok("성공");
     }
 
     // 커플 정보 조회 API 추가

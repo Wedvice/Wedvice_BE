@@ -1,6 +1,9 @@
 package com.wedvice.controller;
 
+import com.wedvice.dto.UserDto;
 import com.wedvice.entity.User;
+import com.wedvice.security.login.CustomUserDetails;
+import com.wedvice.security.login.LoginUser;
 import com.wedvice.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +19,13 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+
+    @GetMapping("/get/{userId}")
+    @Operation(summary = "📝 간단한 유저 정보 불러오기(테스트)", description = "사용자 id 입력 시, 간단한 정보 가져옴")
+    public ResponseEntity<UserDto> getUserInfo(@LoginUser CustomUserDetails loginUser, @Parameter(description = "사용자 ID") @PathVariable("userId") Long userId) {
+        var userDto = userService.getUserInfo(userId);
+        return ResponseEntity.ok(userDto);
+    }
 
     @PatchMapping("/update/{userId}")
     @Operation(summary = "📝 사용자 정보 업데이트", description = "사용자의 닉네임, 매칭된 사용자 ID, 메모를 업데이트합니다. 각 파라미터는 선택적으로 입력할 수 있습니다.")
