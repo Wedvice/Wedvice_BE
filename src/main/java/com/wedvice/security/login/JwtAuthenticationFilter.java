@@ -23,7 +23,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             "/auth/refresh",
             "/auth/status",
             "/login/oauth2/code/kakao",
-            "/oauth2/authorization/kakao"
+            "/oauth2/authorization/kakao",
+            "/swagger-ui/index.html",
+            "/swagger-ui/swagger-initializer.js",
+            "/swagger-ui/swagger-ui-standalone-preset.js",
+            "/swagger-ui/swagger-ui-bundle.js",
+            "/swagger-ui/index.css",
+            "/swagger-ui/swagger-ui.css",
+            "/v3/api-docs/swagger-config",
+            "/v3/api-docs"
+
+
             // 추가로 공개 API 있으면 여기에 등록
     );
 
