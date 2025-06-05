@@ -24,7 +24,10 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: chmod +x ./gradlew
-      
+    
+    - name: application.properties 파일 만들기
+      run: echo "${{ secrets.APPLICATION_PROPERTIES }}" > ./src/main/resources/application.properties
+    
     - name: Build with Gradle
       run: ./gradlew bootJar
     - name: Check JAR files
@@ -41,7 +44,7 @@ jobs:
 
     - name: Build and push Docker image to ECR
       run: |
-        ECR_REPOSITORY=java-app  # 여기에 본인 리포지토리 이름 적기
+        ECR_REPOSITORY=java-app
         ECR_REGISTRY=$(aws sts get-caller-identity --query "Account" --output text).dkr.ecr.ap-northeast-2.amazonaws.com
         IMAGE_TAG=latest
         docker build -t $ECR_REPOSITORY .
@@ -55,11 +58,9 @@ jobs:
         username: ec2-user
         key: ${{ secrets.EC2_SSH_KEY2 }}
         script: |
-          ECR_REPOSITORY=java-app  # 동일하게 설정
+          ECR_REPOSITORY=java-app
           ECR_REGISTRY=$(aws sts get-caller-identity --query "Account" --output text).dkr.ecr.ap-northeast-2.amazonaws.com
           IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY:latest
-    
-          echo "IMAGE=$IMAGE"  # 디버깅용 출력
     
           aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $ECR_REGISTRY
     
