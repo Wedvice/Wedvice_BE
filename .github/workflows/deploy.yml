@@ -1,4 +1,4 @@
-ame: Deploy Java App to EC2 via ECR
+name: Deploy Java App to EC2 via ECR
 
 on:
   push:
