@@ -1,0 +1,72 @@
+ame: Deploy Java App to EC2 via ECR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ap-northeast-2
+      ECR_REPOSITORY: java-app
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: temurin
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+      
+    - name: Build with Gradle
+      run: ./gradlew bootJar
+    - name: Check JAR files
+      run: ls -l build/libs/
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-2
+
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build and push Docker image to ECR
+      run: |
+        ECR_REPOSITORY=java-app  # 여기에 본인 리포지토리 이름 적기
+        ECR_REGISTRY=$(aws sts get-caller-identity --query "Account" --output text).dkr.ecr.ap-northeast-2.amazonaws.com
+        IMAGE_TAG=latest
+        docker build -t $ECR_REPOSITORY .
+        docker tag $ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+    
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.EC2_HOST2 }}
+        username: ec2-user
+        key: ${{ secrets.EC2_SSH_KEY2 }}
+        script: |
+          ECR_REPOSITORY=java-app  # 동일하게 설정
+          ECR_REGISTRY=$(aws sts get-caller-identity --query "Account" --output text).dkr.ecr.ap-northeast-2.amazonaws.com
+          IMAGE=$ECR_REGISTRY/$ECR_REPOSITORY:latest
+    
+          echo "IMAGE=$IMAGE"  # 디버깅용 출력
+    
+          aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $ECR_REGISTRY
+    
+          docker stop java-app || true
+          docker rm java-app || true
+    
+          docker pull $IMAGE
+          docker run -d --name java-app -p 80:8080 \
+            --memory="512m" --cpus="0.5" \
+            $IMAGE
