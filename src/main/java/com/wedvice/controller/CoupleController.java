@@ -1,5 +1,6 @@
 package com.wedvice.controller;
 
+import com.wedvice.dto.CompleteMatchRequestDto;
 import com.wedvice.dto.MatchRequestDto;
 import com.wedvice.entity.Couple;
 import com.wedvice.security.login.CustomUserDetails;
@@ -55,5 +56,15 @@ public class CoupleController {
 
         Couple couple = coupleService.getCouple(coupleId);
         return ResponseEntity.ok(couple);
+    }
+
+    @PostMapping
+    @Operation(
+            summary = "커플 매칭 마지막 단계",
+            description = "커플의 닉네임과 성별을 저장합니다."
+    )
+    public ResponseEntity<?> completeMatch(@RequestBody CompleteMatchRequestDto requestDto, @LoginUser CustomUserDetails loginUser) {
+        coupleService.completeMatch(loginUser.getUserId(), requestDto);
+        return ResponseEntity.ok().build();
     }
 }

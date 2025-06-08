@@ -6,7 +6,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -47,11 +46,9 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "groom")
-    private List<Couple> groomCouples;
-
-    @OneToMany(mappedBy = "bride")
-    private List<Couple> brideCouples;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coupleId", nullable = true)
+    private Couple couple;
 
     public void updateRefreshToken(String newRefreshToken) {
         //  토큰 저장.
