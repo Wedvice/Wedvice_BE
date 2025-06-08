@@ -59,6 +59,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    // 사용안할듯
     @Transactional
     public void updateMatchedUserAndCreateCouple(Long userId, Long matchedUserId) {
         User user = userRepository.findById(userId)
