@@ -20,11 +20,11 @@ public class Couple {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "groom_id", nullable = false)
+    @JoinColumn(name = "groom_id", nullable = true)
     private User groom;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bride_id", nullable = false)
+    @JoinColumn(name = "bride_id", nullable = true)
     private User bride;
 
     @Column(name = "wedding_date", nullable = true)  // ✅ 결혼 날짜 nullable

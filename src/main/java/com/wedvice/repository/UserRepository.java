@@ -23,8 +23,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // ✅ 매칭된 사용자 ID 업데이트
     @Transactional
     @Modifying
-    @Query("UPDATE User u SET u.matchedUserId = :matchedUserId WHERE u.id = :userId")
-    void updateMatchedUserId(Long userId, Long matchedUserId);
+    @Query("UPDATE User u SET u.matchedUserId = :matchedUserId, u.couple.id = :coupleId WHERE u.id = :userId")
+    void updateMatchedUserId(@Param("userId") Long userId,
+                             @Param("matchedUserId") Long matchedUserId,
+                             @Param("coupleId") Long coupleId);
 
     @Modifying
     @Query("UPDATE User u SET u.refreshToken = :refreshToken WHERE u.id = :id")
