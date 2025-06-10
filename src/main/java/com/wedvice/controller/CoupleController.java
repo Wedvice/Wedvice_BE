@@ -1,11 +1,13 @@
 package com.wedvice.controller;
 
 import com.wedvice.dto.CompleteMatchRequestDto;
+import com.wedvice.dto.MatchCodeResponseDto;
 import com.wedvice.dto.MatchRequestDto;
 import com.wedvice.entity.Couple;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
 import com.wedvice.service.CoupleService;
+import com.wedvice.util.MatchCodeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class CoupleController {
 
     private final CoupleService coupleService;
+    private final MatchCodeService matchCodeService;
 
     @PatchMapping("/update-wedding-date/{coupleId}")
     @Operation(
@@ -35,6 +38,12 @@ public class CoupleController {
 
         coupleService.updateWeddingDate(coupleId, weddingDate);
         return ResponseEntity.ok("결혼 날짜가 업데이트되었습니다.");
+    }
+
+    @GetMapping("/match-code")
+    public ResponseEntity<MatchCodeResponseDto> getMatchCode(@LoginUser CustomUserDetails loginUser) {
+        var responseDto = MatchCodeResponseDto.builder().matchCode(matchCodeService.generateCode(loginUser.getUserId())).build();
+        return ResponseEntity.ok(responseDto);
     }
 
     @PostMapping("/match")

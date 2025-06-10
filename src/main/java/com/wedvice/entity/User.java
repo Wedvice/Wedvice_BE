@@ -52,6 +52,6 @@ public class User {
 
     public void updateRefreshToken(String newRefreshToken) {
         //  토큰 저장.
-        this.refreshToken = refreshToken;
+        this.refreshToken = newRefreshToken;
     }
 }
