@@ -1,4 +1,4 @@
-package com.wedvice.dto;
+package com.wedvice.couple.dto;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

@@ -35,6 +35,7 @@ out/
 
 ### VS Code ###
 .vscode/
-
+git rm --cached data.sql
 
 /src/main/resources/application.properties
+/src/main/resources/data.sql

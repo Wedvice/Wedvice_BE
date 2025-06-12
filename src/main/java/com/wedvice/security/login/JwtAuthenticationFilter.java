@@ -1,6 +1,6 @@
 package com.wedvice.security.login;
 
-import com.wedvice.excption.JwtAuthenticationException;
+import com.wedvice.security.excption.JwtAuthenticationException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,11 +50,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String token = tokenProvider.resolveToken(request);
 
 
         String requestURI = request.getRequestURI();
         if (!isWhiteListed(requestURI)) {
+
+            String token = tokenProvider.resolveToken(request);
+
             // 화이트리스트가 아니면 JWT 검사
             System.out.println(requestURI);
             System.out.println(token);
@@ -63,7 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             System.out.println("통과함?");
             Long userId = tokenProvider.getUserIdFromToken(token);
-            String username = tokenProvider.getUsernameFromToken(token);
+            String username = tokenProvider.getNicknameFromToken(token);
 
             // 유저 정보를 담은 UserDetails 생성
             CustomUserDetails userDetails = new CustomUserDetails(userId, username, List.of());

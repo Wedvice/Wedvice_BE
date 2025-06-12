@@ -1,8 +1,9 @@
-package com.wedvice.controller;
+package com.wedvice.security.login;
 
-import com.wedvice.service.UserService;
+import com.wedvice.user.service.UserService;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,8 @@ import java.util.Map;
 public class AuthController {
     private final UserService userService;
 
+
+//    필요한지?
     @GetMapping("/status")
     public Map<String, Object> loginStatus() {
         Map<String, Object> response = new HashMap<>();
@@ -35,8 +38,15 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<Map> refresh(@CookieValue(name = "refreshToken", required = false) Cookie cookie) {
+    public ResponseEntity<?> refresh(@CookieValue(name = "refreshToken", required = false) Cookie cookie) {
+
         Map<String, Object> result = userService.refresh(cookie);
-        return ResponseEntity.ok(result);
+        HttpHeaders headers = (HttpHeaders) result.get("headers");
+        Object body = result.get("body");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .body(body);
     }
 }

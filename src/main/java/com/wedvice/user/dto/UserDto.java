@@ -1,4 +1,4 @@
-package com.wedvice.dto;
+package com.wedvice.user.dto;
 
 import lombok.Builder;
 import lombok.Getter;

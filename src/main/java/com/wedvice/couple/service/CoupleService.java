@@ -1,17 +1,16 @@
-package com.wedvice.service;
+package com.wedvice.couple.service;
 
-import com.wedvice.dto.CompleteMatchRequestDto;
-import com.wedvice.dto.Gender;
-import com.wedvice.entity.Couple;
-import com.wedvice.entity.User;
-import com.wedvice.repository.CoupleRepository;
-import com.wedvice.repository.UserRepository;
-import com.wedvice.util.MatchCodeService;
+import com.wedvice.couple.dto.CompleteMatchRequestDto;
+import com.wedvice.couple.dto.Gender;
+import com.wedvice.couple.entity.Couple;
+import com.wedvice.user.entity.User;
+import com.wedvice.couple.repository.CoupleRepository;
+import com.wedvice.user.repository.UserRepository;
+import com.wedvice.couple.util.MatchCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -22,20 +21,6 @@ public class CoupleService {
     private final MatchCodeService matchCodeService;
     private final UserRepository userRepository;
 
-    @Transactional
-    public void updateWeddingDate(Long coupleId, String weddingDate) {
-        Couple couple = coupleRepository.findById(coupleId)
-                .orElseThrow(() -> new RuntimeException("커플 정보를 찾을 수 없습니다."));
-
-        couple.setWeddingDate(LocalDate.parse(weddingDate));
-        coupleRepository.save(couple);
-    }
-
-    @Transactional(readOnly = true)
-    public Couple getCouple(Long coupleId) {
-        return coupleRepository.findById(coupleId)
-                .orElseThrow(() -> new RuntimeException("커플 정보를 찾을 수 없습니다."));
-    }
 
     @Transactional
     public void matchCouple(long userId, String matchCode) {

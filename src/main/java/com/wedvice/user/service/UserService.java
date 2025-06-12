@@ -1,11 +1,10 @@
-package com.wedvice.service;
+package com.wedvice.user.service;
 
 import com.wedvice.dto.TokenResponseDto;
-import com.wedvice.dto.UserDto;
-import com.wedvice.entity.Couple;
-import com.wedvice.entity.User;
-import com.wedvice.repository.CoupleRepository;
-import com.wedvice.repository.UserRepository;
+import com.wedvice.user.dto.UserDto;
+import com.wedvice.user.entity.User;
+import com.wedvice.couple.repository.CoupleRepository;
+import com.wedvice.user.repository.UserRepository;
 import com.wedvice.security.login.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
@@ -39,60 +38,7 @@ public class UserService {
                 });
     }
 
-    @Transactional
-    public void updateUserInfo(Long userId, String nickname, Long matchedUserId, String memo) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
 
-        if (nickname != null) user.setNickname(nickname);
-        if (matchedUserId != null) user.setMatchedUserId(matchedUserId);
-        if (memo != null) user.setMemo(memo);
-
-        userRepository.save(user);
-    }
-
-    @Transactional
-    public void updateMemo(Long userId, String memo) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        user.setMemo(memo);
-        userRepository.save(user);
-    }
-
-    // 사용안할듯
-    @Transactional
-    public void updateMatchedUserAndCreateCouple(Long userId, Long matchedUserId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-        User matchedUser = userRepository.findById(matchedUserId)
-                .orElseThrow(() -> new RuntimeException("매칭된 사용자를 찾을 수 없습니다."));
-
-        // ✅ User의 matchedUserId 양방향 업데이트
-        user.setMatchedUserId(matchedUserId);
-        matchedUser.setMatchedUserId(userId);
-        userRepository.save(user);
-        userRepository.save(matchedUser);
-
-        // ✅ 이미 존재하는 커플인지 확인
-
-        boolean coupleExists = coupleRepository.existsByGroomAndBride(user, matchedUser) ||
-                coupleRepository.existsByGroomAndBride(matchedUser, user);
-
-        if (!coupleExists) {
-            // ✅ Couple 테이블에 새로운 로우 생성
-            Couple couple = Couple.builder()
-                    .groom(user)
-                    .bride(matchedUser)
-                    .build();
-            coupleRepository.save(couple);
-        }
-    }
-
-    @Transactional(readOnly = true)
-    public User getUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
-    }
 
     @Transactional
     public Map<String, Object> refresh(Cookie cookie) {
@@ -118,9 +64,9 @@ public class UserService {
             }
 
             String newAccessToken = jwtTokenProvider.generateAccessToken(
-                    String.valueOf(user.getId()), String.valueOf(user.getOauthId()));
+                    String.valueOf(user.getId()), user.getNickname(), String.valueOf(user.getOauthId()));
             String newRefreshToken = jwtTokenProvider.generateRefreshToken(
-                    String.valueOf(user.getId()), String.valueOf(user.getOauthId()));
+                    String.valueOf(user.getId()), user.getNickname(),String.valueOf(user.getOauthId()));
 
             userRepository.updateRefreshToken(user.getId(), newRefreshToken);
 
@@ -134,13 +80,13 @@ public class UserService {
     public Map<String, Object> createTokenResult(String accessToken, String refreshToken) {
         Map<String, Object> result = new HashMap<>();
 
+
         HttpHeaders headers = createTokenHeader(refreshToken);
-        TokenResponseDto responseDto = TokenResponseDto.builder()
-                .accessToken("Bearer " + accessToken)
-                .build();
+        headers.add("Authorization", "Bearer " + accessToken); // 🔥 accessToken 헤더에 추가
+
+
 
         result.put("headers", headers);
-        result.put("body", responseDto);
 
         return result;
     }

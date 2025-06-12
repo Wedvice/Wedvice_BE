@@ -1,6 +1,6 @@
 package com.wedvice.security.login;
 
-import com.wedvice.excption.JwtAuthenticationException;
+import com.wedvice.security.excption.JwtAuthenticationException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

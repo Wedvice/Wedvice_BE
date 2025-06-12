@@ -41,43 +41,46 @@ public class JwtTokenProvider {
         return Long.parseLong(claims.getSubject()); // sub에 userId가 들어있다고 가정
     }
 
-    public String getUsernameFromToken(String token) {
+    public String getNicknameFromToken(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(key)
                 .parseClaimsJws(token)
                 .getBody();
         ((Map) claims).forEach((a, b) -> {
         });
-        return claims.get("username", String.class); // username을 따로 넣은 경우
+        return claims.get("nickname", String.class); // nickname을 따로 넣은 경우
     }
 
     public String resolveToken(HttpServletRequest request) {
 
-        if (request.getCookies() == null) return null;
+        String authorization = request.getHeader("Authorization");
 
-        for (Cookie cookie : request.getCookies()) {
-            if ("accessToken".equals(cookie.getName())) {
-                return cookie.getValue();
-            }
-        }
-        return null;
+        System.out.println("authorization = " + authorization);
+
+        String accessToken = authorization.split(" ")[1];
+
+        if (accessToken == null) return null;
+
+
+        return accessToken;
     }
 
-    public String generateAccessToken(String userId, String oauthId) {
-        return generateToken(userId, oauthId, accessTokenExpiration);
+    public String generateAccessToken(String userId,String nickname, String oauthId) {
+        return generateToken(userId, nickname,oauthId, accessTokenExpiration);
     }
 
-    public String generateRefreshToken(String userId, String oauthId) {
-        return generateToken(userId, oauthId, refreshTokenExpiration);
+    public String generateRefreshToken(String userId,String nickname, String oauthId) {
+        return generateToken(userId,nickname, oauthId, refreshTokenExpiration);
     }
 
-    private String generateToken(String userId, String oauthId, long expiration) {
+    private String generateToken(String userId, String nickname,String oauthId, long expiration) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .setSubject(userId) // 내부 식별자 (PK)
                 .claim("oauthId", oauthId)
+                .claim("nickname",nickname)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(key, SignatureAlgorithm.HS256)

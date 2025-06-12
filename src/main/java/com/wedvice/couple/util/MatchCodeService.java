@@ -1,4 +1,4 @@
-package com.wedvice.util;
+package com.wedvice.couple.util;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;

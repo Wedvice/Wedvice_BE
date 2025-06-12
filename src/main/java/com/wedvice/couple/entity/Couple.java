@@ -1,13 +1,16 @@
-package com.wedvice.entity;
+package com.wedvice.couple.entity;
 
+import com.wedvice.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
-@Table(name = "couples")
+@Table(name = "couple")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,17 +22,12 @@ public class Couple {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "groom_id", nullable = true)
-    private User groom;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bride_id", nullable = true)
-    private User bride;
-
     @Column(name = "wedding_date", nullable = true)  // ✅ 결혼 날짜 nullable
     private LocalDate weddingDate;
 
     @CreationTimestamp
     private LocalDate createdAt;
+
+    @OneToMany(mappedBy = "couple", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<User> users = new ArrayList<>();
 }

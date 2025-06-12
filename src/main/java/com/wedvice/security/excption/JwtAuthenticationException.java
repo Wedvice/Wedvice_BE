@@ -1,4 +1,4 @@
-package com.wedvice.excption;
+package com.wedvice.security.excption;
 
 public class JwtAuthenticationException extends RuntimeException {
     public JwtAuthenticationException(String message) {

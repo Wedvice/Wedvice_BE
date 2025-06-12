@@ -1,4 +1,4 @@
-package com.wedvice.util;
+package com.wedvice.couple.util;
 
 import lombok.Getter;
 

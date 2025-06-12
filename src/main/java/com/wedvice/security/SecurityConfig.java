@@ -1,17 +1,18 @@
 package com.wedvice.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wedvice.entity.User;
+import com.wedvice.user.entity.User;
 import com.wedvice.security.login.ExceptionHandlingFilter;
 import com.wedvice.security.login.JwtAuthenticationFilter;
 import com.wedvice.security.login.JwtTokenProvider;
-import com.wedvice.service.UserService;
+import com.wedvice.user.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -39,6 +40,9 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+
+
         http
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
@@ -73,10 +77,16 @@ public class SecurityConfig {
                             // ✅ DB에 사용자 정보 저장 (이미 있으면 무시)
                             User user = userService.saveOrGetUser(oauthId, provider, nickname, profileImageUrl);
                             // ✅ JWT 생성
-                            String accessToken = jwtTokenProvider.generateAccessToken(user.getId().toString(), user.getOauthId());
-                            String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(), user.getOauthId());
+                            String accessToken = jwtTokenProvider.generateAccessToken(user.getId().toString(),user.getNickname(),user.getOauthId());
+                            String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(),user.getNickname(), user.getOauthId());
                             userService.touchRefreshToken(refreshToken, user.getId());
 
+//                            프론트에서 가지고있는 엑세스 토큰이 백엔드로 전달되었을 경우
+//                            1. 결과값 응답
+//                            2. 만료된 토큰일 경우 /refresh경로 타라고 말해줘야함 -> 어떤 에러코드일 경우에 백엔드한테 /refresh경로로 다시 보내라
+//                            3. 아예 잘못된 토큰일 경우
+
+//                            엑세스 토큰 받으면 Authrorization Bearer + //
                             // ✅ JWT를 HttpOnly 쿠키에 저장 (클라이언트 JS에서 접근 불가)
                             Cookie accessCookie = new Cookie("accessToken", accessToken);
                             accessCookie.setHttpOnly(true);
@@ -111,6 +121,9 @@ public class SecurityConfig {
                             result.put("isLoggedIn", false);
                             new ObjectMapper().writeValue(response.getWriter(), result);
                         })
+
+                ).sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
 
         return http.build();

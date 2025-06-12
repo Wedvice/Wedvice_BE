@@ -1,4 +1,4 @@
-package com.wedvice.util;
+package com.wedvice.couple.util;
 
 import org.springframework.stereotype.Component;
 
