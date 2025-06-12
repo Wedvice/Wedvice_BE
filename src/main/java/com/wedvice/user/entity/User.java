@@ -46,7 +46,7 @@ public class User {
     private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
+    @Column(name = "role", nullable = true)
     private Role role;
 
     @UpdateTimestamp
@@ -64,10 +64,6 @@ public class User {
         this.refreshToken = newRefreshToken;
     }
 
-//    코드 입력(couple외래키가 있냐 없냐) -> 닉네임(nickname) -> 성별(role) ->
-//    입력 다 하면 상대방 입력 대기 뻉글뻉글 -> 홈 화면에 언제 보내줄꺼냐?
-//    (user.couple.users(!=id).getnickname,role !=null
-
 
     @Getter
     public static enum Role {
@@ -78,7 +74,7 @@ public class User {
         private final String message;
 
         Role(String message) {
-            this.message=message;
+            this.message = message;
         }
     }
 }

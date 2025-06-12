@@ -1,11 +1,10 @@
 package com.wedvice.user.service;
 
-import com.wedvice.dto.TokenResponseDto;
+import com.wedvice.couple.repository.CoupleRepository;
+import com.wedvice.security.login.JwtTokenProvider;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.entity.User;
-import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.user.repository.UserRepository;
-import com.wedvice.security.login.JwtTokenProvider;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -39,7 +38,6 @@ public class UserService {
     }
 
 
-
     @Transactional
     public Map<String, Object> refresh(Cookie cookie) {
         if (cookie == null) {
@@ -66,7 +64,7 @@ public class UserService {
             String newAccessToken = jwtTokenProvider.generateAccessToken(
                     String.valueOf(user.getId()), user.getNickname(), String.valueOf(user.getOauthId()));
             String newRefreshToken = jwtTokenProvider.generateRefreshToken(
-                    String.valueOf(user.getId()), user.getNickname(),String.valueOf(user.getOauthId()));
+                    String.valueOf(user.getId()), user.getNickname(), String.valueOf(user.getOauthId()));
 
             userRepository.updateRefreshToken(user.getId(), newRefreshToken);
 
@@ -83,7 +81,6 @@ public class UserService {
 
         HttpHeaders headers = createTokenHeader(refreshToken);
         headers.add("Authorization", "Bearer " + accessToken); // 🔥 accessToken 헤더에 추가
-
 
 
         result.put("headers", headers);
