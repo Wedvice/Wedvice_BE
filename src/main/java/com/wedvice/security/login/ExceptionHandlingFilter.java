@@ -1,6 +1,8 @@
 package com.wedvice.security.login;
 
-import com.wedvice.security.excption.JwtAuthenticationException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wedvice.common.ApiResponse;
+import com.wedvice.common.exception.CustomException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,18 +14,20 @@ import java.io.IOException;
 
 @Component
 public class ExceptionHandlingFilter extends OncePerRequestFilter {
+    ObjectMapper a = new ObjectMapper();
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             filterChain.doFilter(request, response);
-        } catch (JwtAuthenticationException ex) {
+        } catch (CustomException ex) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json;charset=UTF-8");
-
-            String body = "{\"error\": \"Unauthorized\", \"message\": \"" + ex.getMessage() + "\"}";
-            response.getWriter().write(body);
+            ApiResponse<?> body = ApiResponse.error(ex.httpStatus.value(), ex.getMessage());
+            ObjectMapper a = new ObjectMapper();
+            response.getWriter().write(a.writeValueAsString(body));
         }
     }
 }

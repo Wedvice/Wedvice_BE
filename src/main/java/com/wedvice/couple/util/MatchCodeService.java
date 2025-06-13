@@ -28,10 +28,14 @@ public class MatchCodeService {
         return code;
     }
 
-    public Optional<Long> consumeCode(String code) {
-        MatchCode matchCode = codeMap.remove(code);
-        if (matchCode == null) return Optional.empty();
+    public Optional<Long> getCodeUserId(String code) {
+        MatchCode matchCode = codeMap.get(code);
+        if (matchCode == null || isExpired(matchCode.getCreatedAt())) return Optional.empty();
         return Optional.of(matchCode.getUserId());
+    }
+
+    public void removeCode(String code) {
+        codeMap.remove(code);
     }
 
     public boolean isValid(String code) {

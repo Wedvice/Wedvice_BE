@@ -51,7 +51,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
 
-
         String requestURI = request.getRequestURI();
         if (!isWhiteListed(requestURI)) {
 
@@ -61,7 +60,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             System.out.println(requestURI);
             System.out.println(token);
             if (token == null || !tokenProvider.validateToken(token)) {
-                throw new JwtAuthenticationException("Invalid or expired token");
+                throw new JwtAuthenticationException();
+                //"Invalid or expired token"
             }
             System.out.println("통과함?");
             Long userId = tokenProvider.getUserIdFromToken(token);
