@@ -20,6 +20,7 @@ public class Couple {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "couple_id")
     private Long id;
 
     @Column(name = "wedding_date", nullable = true)  // ✅ 결혼 날짜 nullable
