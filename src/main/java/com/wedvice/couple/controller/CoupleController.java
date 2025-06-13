@@ -1,5 +1,6 @@
 package com.wedvice.couple.controller;
 
+import com.wedvice.common.ApiResponse;
 import com.wedvice.couple.dto.CompleteMatchRequestDto;
 import com.wedvice.couple.dto.CoupleHomeInfoResponseDto;
 import com.wedvice.couple.dto.MatchRequestDto;
@@ -21,10 +22,10 @@ public class CoupleController {
 
 
     @PostMapping("/match")
-    public ResponseEntity<?> match(@RequestBody MatchRequestDto request, @LoginUser CustomUserDetails loginUser) {
+    public ResponseEntity<ApiResponse<?>> match(@RequestBody MatchRequestDto request, @LoginUser CustomUserDetails loginUser) {
         long userId = loginUser.getUserId();
         coupleService.matchCouple(userId, request.getMatchCode());
-        return ResponseEntity.ok("성공");
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @PostMapping
@@ -32,9 +33,9 @@ public class CoupleController {
             summary = "커플 매칭 마지막 단계",
             description = "커플의 닉네임과 성별을 저장합니다."
     )
-    public ResponseEntity<?> completeMatch(@RequestBody CompleteMatchRequestDto requestDto, @LoginUser CustomUserDetails loginUser) {
+    public ResponseEntity<ApiResponse<?>> completeMatch(@RequestBody CompleteMatchRequestDto requestDto, @LoginUser CustomUserDetails loginUser) {
         coupleService.completeMatch(loginUser.getUserId(), requestDto);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @GetMapping("/summary")
@@ -42,9 +43,9 @@ public class CoupleController {
             summary = "홈페이지 커플 정보 조회",
             description = "커플의 웨딩 날짜, 메모, imageUrl을 조회합니다."
     )
-    public ResponseEntity<CoupleHomeInfoResponseDto> getCoupleInfo(@LoginUser CustomUserDetails loginUser) {
+    public ResponseEntity<ApiResponse<CoupleHomeInfoResponseDto>> getCoupleInfo(@LoginUser CustomUserDetails loginUser) {
         CoupleHomeInfoResponseDto coupleHomeInfoResponseDto = coupleService.getCoupleInfo(loginUser.getUserId());
-        return ResponseEntity.ok(coupleHomeInfoResponseDto);
+        return ResponseEntity.ok(ApiResponse.success(coupleHomeInfoResponseDto));
     }
 
 }

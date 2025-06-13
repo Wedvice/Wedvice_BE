@@ -1,4 +1,4 @@
-package com.wedvice.config;
+package com.wedvice.common.config;
 
 import com.wedvice.security.login.LoginUserArgumentResolver;
 import org.springframework.context.annotation.Configuration;

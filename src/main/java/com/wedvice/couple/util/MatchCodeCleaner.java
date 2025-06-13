@@ -16,5 +16,4 @@ public class MatchCodeCleaner {
     public void cleanExpiredCodes() {
         matchCodeService.removeExpiredCodes();
     }
-
 }

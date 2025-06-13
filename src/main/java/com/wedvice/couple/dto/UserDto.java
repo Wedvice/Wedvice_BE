@@ -2,7 +2,9 @@ package com.wedvice.couple.dto;
 
 import com.wedvice.user.entity.User;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
+@Data
 public class UserDto {
     @Schema(description = "프로필 이미지 URL", example = "https://example.com/profile.jpg")
     private String imageUrl;

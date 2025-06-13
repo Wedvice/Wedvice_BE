@@ -1,11 +1,12 @@
 package com.wedvice.security.excption;
 
-public class JwtAuthenticationException extends RuntimeException {
-    public JwtAuthenticationException(String message) {
-        super(message);
-    }
+import com.wedvice.common.exception.CustomException;
+import org.springframework.http.HttpStatus;
 
-    public JwtAuthenticationException(String message, Throwable cause) {
-        super(message, cause);
+public class JwtAuthenticationException extends CustomException {
+    private static String message = "올바른 토큰이 아닙니다";
+
+    public JwtAuthenticationException() {
+        super(message, HttpStatus.BAD_REQUEST);
     }
 }

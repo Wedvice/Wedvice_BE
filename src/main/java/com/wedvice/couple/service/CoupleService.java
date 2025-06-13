@@ -5,6 +5,8 @@ import com.wedvice.couple.dto.CoupleHomeInfoResponseDto;
 import com.wedvice.couple.dto.Gender;
 import com.wedvice.couple.dto.UserDto;
 import com.wedvice.couple.entity.Couple;
+import com.wedvice.couple.exception.NoTowPeopleException;
+import com.wedvice.couple.exception.NotInputStatusException;
 import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.couple.util.MatchCodeService;
 import com.wedvice.user.entity.User;
@@ -78,12 +80,12 @@ public class CoupleService {
         }
 
         if (user.getNickname() == null || user.getRole() == null) {
-            throw new RuntimeException("아직 필수 입력 정보가 남았습니다."); // 닉네임 or 성별 미입력
+            throw new NotInputStatusException(); // 닉네임 or 성별 미입력
         }
 
         List<User> users = couple.getUsers();
         if (users == null || users.size() != 2) {
-            throw new RuntimeException("커플 정보가 비정상적입니다.");
+            throw new NoTowPeopleException();
         }
 
         User partner = users.stream()

@@ -1,15 +1,19 @@
 package com.wedvice.user.controller;
 
-import com.wedvice.user.dto.UserDto;
+import com.wedvice.common.ApiResponse;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
+import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/user")
@@ -19,11 +23,10 @@ public class UserController {
 
     private final UserService userService;
 
-    @GetMapping("/get/{userId}")
+    @GetMapping("/{userId}")
     @Operation(summary = "📝 간단한 유저 정보 불러오기(테스트)", description = "사용자 id 입력 시, 간단한 정보 가져옴")
-    public ResponseEntity<UserDto> getUserInfo(@LoginUser CustomUserDetails loginUser, @Parameter(description = "사용자 ID") @PathVariable("userId") Long userId) {
+    public ResponseEntity<ApiResponse<UserDto>> getUserInfo(@LoginUser CustomUserDetails loginUser, @Parameter(description = "사용자 ID") @PathVariable("userId") Long userId) {
         var userDto = userService.getUserInfo(userId);
-        return ResponseEntity.ok(userDto);
+        return ResponseEntity.ok(ApiResponse.success(userDto));
     }
-
 }
