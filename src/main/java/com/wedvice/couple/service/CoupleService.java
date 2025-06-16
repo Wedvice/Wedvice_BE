@@ -5,8 +5,7 @@ import com.wedvice.couple.dto.CoupleHomeInfoResponseDto;
 import com.wedvice.couple.dto.Gender;
 import com.wedvice.couple.dto.UserDto;
 import com.wedvice.couple.entity.Couple;
-import com.wedvice.couple.exception.NoTowPeopleException;
-import com.wedvice.couple.exception.NotInputStatusException;
+import com.wedvice.couple.exception.*;
 import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.couple.util.MatchCodeService;
 import com.wedvice.user.entity.User;
@@ -30,14 +29,14 @@ public class CoupleService {
     @Transactional
     public void matchCouple(long userId, String matchCode) {
         Optional<Long> partnerId = matchCodeService.getCodeUserId(matchCode);
-        long pid = partnerId.orElseThrow(() -> new RuntimeException("만료되었거나 존재하지 않는 매치 코드 입니다. %s".formatted(matchCode)));
+        long pid = partnerId.orElseThrow(() -> new MatchCodeExpiredException(matchCode));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("유효하지 않은 유저의 접근입니다."));
+                .orElseThrow(InvalidUserAccessException::new);
         User partnerUser = userRepository.findById(pid)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 유저와의 매칭입니다."));
+                .orElseThrow(UserNotFoundException::new);
 
-        if (userId == partnerUser.getId()) throw new RuntimeException("본인과는 커플이 될 수 없습니다.");
+        if (userId == partnerUser.getId()) throw new SamePersonMatchException();
 
         Couple couple = coupleRepository.save(Couple.builder().build());
 
@@ -51,12 +50,12 @@ public class CoupleService {
     @Transactional
     public void completeMatch(Long userId, CompleteMatchRequestDto requestDto) {
         Gender gender = requestDto.getGender();
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("유효하지 않은 유저의 접근입니다."));
+        User user = userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
         if (user.getCouple() == null) {
-            throw new RuntimeException("커플 매칭이 되지 않았습니다.");
+            throw new NotMatchedYetException();
         }
         if (user.getRole() != null) {
-            throw new RuntimeException("이미 닉네임 설정 및 신랑 신부 역할이 입력되었습니다.");
+            throw new AlreadyMatchedException();
         }
 
         user.setNickname(requestDto.getNickName());
@@ -72,7 +71,7 @@ public class CoupleService {
     //    (user.couple.users(!=id).getnickname,role !=null
     public CoupleHomeInfoResponseDto getCoupleInfo(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("유효하지 않은 유저의 접근입니다."));
+                .orElseThrow(InvalidUserAccessException::new);
 
         Couple couple = user.getCouple();
         if (couple == null) {
@@ -80,7 +79,7 @@ public class CoupleService {
         }
 
         if (user.getNickname() == null || user.getRole() == null) {
-            throw new NotInputStatusException(); // 닉네임 or 성별 미입력
+            throw new NotMatchedYetException(); // 닉네임 or 성별 미입력
         }
 
         List<User> users = couple.getUsers();
@@ -91,10 +90,10 @@ public class CoupleService {
         User partner = users.stream()
                 .filter(u -> !u.getId().equals(userId))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("상대방 정보가 존재하지 않습니다."));
+                .orElseThrow(PartnerNotFoundException::new);
 
         if (partner.getNickname() == null || partner.getRole() == null) {
-            throw new RuntimeException("아직 상대방의 매칭 정보가 완료되지 않았습니다.");
+            throw new PartnerIncompleteException();
         }
 
         // 신랑/신부 구분

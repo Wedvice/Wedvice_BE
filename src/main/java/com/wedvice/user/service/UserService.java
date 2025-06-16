@@ -4,6 +4,10 @@ import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.security.login.JwtTokenProvider;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.entity.User;
+import com.wedvice.user.exeption.TokenInvalidException;
+import com.wedvice.user.exeption.TokenMismatchException;
+import com.wedvice.user.exeption.TokenNotFoundException;
+import com.wedvice.user.exeption.UnknownTokenException;
 import com.wedvice.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
@@ -41,13 +45,13 @@ public class UserService {
     @Transactional
     public Map<String, Object> refresh(Cookie cookie) {
         if (cookie == null) {
-            throw new IllegalArgumentException("쿠키가 존재하지 않음");
+            throw new TokenNotFoundException();
         }
 
         String refreshToken = cookie.getValue();
 
         if (refreshToken == null || refreshToken.isEmpty()) {
-            throw new IllegalArgumentException("리프래쉬 토큰이 없음");
+            throw new TokenInvalidException();
         }
 
         try {
@@ -58,7 +62,7 @@ public class UserService {
 
             String savedRefreshToken = user.getRefreshToken();
             if (!savedRefreshToken.equals(refreshToken)) {
-                throw new IllegalArgumentException("리프래쉬 토큰이 일치하지 않습니다.");
+                throw new TokenMismatchException();
             }
 
             String newAccessToken = jwtTokenProvider.generateAccessToken(
@@ -71,7 +75,7 @@ public class UserService {
             return createTokenResult(newAccessToken, newRefreshToken);
         } catch (RuntimeException e) {
             e.printStackTrace();
-            throw new RuntimeException("알 수 없는 에러가 발생했습니다.");
+            throw new UnknownTokenException();
         }
     }
 
