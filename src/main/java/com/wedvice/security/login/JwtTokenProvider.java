@@ -5,7 +5,6 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -57,6 +56,7 @@ public class JwtTokenProvider {
 
         System.out.println("authorization = " + authorization);
 
+        if (authorization == null) return null;
         String accessToken = authorization.split(" ")[1];
 
         if (accessToken == null) return null;
@@ -65,22 +65,22 @@ public class JwtTokenProvider {
         return accessToken;
     }
 
-    public String generateAccessToken(String userId,String nickname, String oauthId) {
-        return generateToken(userId, nickname,oauthId, accessTokenExpiration);
+    public String generateAccessToken(String userId, String nickname, String oauthId) {
+        return generateToken(userId, nickname, oauthId, accessTokenExpiration);
     }
 
-    public String generateRefreshToken(String userId,String nickname, String oauthId) {
-        return generateToken(userId,nickname, oauthId, refreshTokenExpiration);
+    public String generateRefreshToken(String userId, String nickname, String oauthId) {
+        return generateToken(userId, nickname, oauthId, refreshTokenExpiration);
     }
 
-    private String generateToken(String userId, String nickname,String oauthId, long expiration) {
+    private String generateToken(String userId, String nickname, String oauthId, long expiration) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
                 .setSubject(userId) // 내부 식별자 (PK)
                 .claim("oauthId", oauthId)
-                .claim("nickname",nickname)
+                .claim("nickname", nickname)
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(key, SignatureAlgorithm.HS256)
