@@ -1,7 +1,12 @@
 package com.wedvice.user.service;
 
+import com.wedvice.couple.entity.Couple;
+import com.wedvice.couple.exception.InvalidUserAccessException;
+import com.wedvice.couple.exception.PartnerNotFoundException;
 import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.security.login.JwtTokenProvider;
+import com.wedvice.security.login.RedirectEnum;
+import com.wedvice.security.login.RedirectResponseDto;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.exeption.TokenInvalidException;
@@ -17,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -131,6 +137,37 @@ public class UserService {
                 .build();
         return userDto;
     }
+
+    public RedirectResponseDto getRedirectStatus(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(InvalidUserAccessException::new);
+
+        Couple couple = user.getCouple();
+        if (couple == null) {
+            return RedirectResponseDto.from(RedirectEnum.JUST_USER); // 매치코드 입력 단계
+        }
+
+        if (user.getNickname() == null || user.getRole() == null) {
+            return RedirectResponseDto.from(RedirectEnum.NOT_COMPLETED);
+        }
+
+        List<User> users = couple.getUsers();
+        if (users == null || users.size() != 2) {
+            return RedirectResponseDto.from(RedirectEnum.ONLY_COMPLETED);
+        }
+
+        User partner = users.stream()
+                .filter(u -> !u.getId().equals(userId))
+                .findFirst()
+                .orElseThrow(PartnerNotFoundException::new);
+
+        if (partner.getNickname() == null || partner.getRole() == null) {
+            return RedirectResponseDto.from(RedirectEnum.ONLY_COMPLETED);
+        }
+
+        return RedirectResponseDto.from(RedirectEnum.PAIR_COMPLETED);
+    }
+
 }
 
 

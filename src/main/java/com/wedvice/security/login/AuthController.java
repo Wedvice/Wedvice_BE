@@ -1,6 +1,8 @@
 package com.wedvice.security.login;
 
+import com.wedvice.common.ApiResponse;
 import com.wedvice.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +22,7 @@ public class AuthController {
     private final UserService userService;
 
 
-//    필요한지?
+    //    필요한지?
     @GetMapping("/status")
     public Map<String, Object> loginStatus() {
         Map<String, Object> response = new HashMap<>();
@@ -35,6 +37,16 @@ public class AuthController {
             response.put("isLoggedIn", false);
         }
         return response;
+    }
+
+    @GetMapping("/redirect")
+    @Operation(
+            summary = "로그인 후 리다이렉트 정보 조회",
+            description = "현재 본인의 회원가입 진행 상태를 조회합니다."
+    )
+    public ResponseEntity<ApiResponse<RedirectResponseDto>> getLoginStatus(@LoginUser CustomUserDetails loginUser) {
+        RedirectResponseDto redirectResponseDto = userService.getRedirectStatus(loginUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(redirectResponseDto));
     }
 
     @PostMapping("/refresh")
