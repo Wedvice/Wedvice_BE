@@ -1,11 +1,15 @@
 package com.wedvice.comment;
 
+import com.wedvice.common.BaseEntity;
+import com.wedvice.subtask.entity.SubTask;
 import com.wedvice.user.entity.User;
 import jakarta.persistence.*;
 import org.springframework.data.annotation.CreatedDate;
 
+import static jakarta.persistence.FetchType.*;
+
 @Entity
-public class Comment {
+public class Comment extends BaseEntity {
 
 
     @Id
@@ -13,11 +17,14 @@ public class Comment {
     @Column(name = "comment_id")
     private Long id;
 
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "subtask_id")
+    private SubTask subTask;
+
+//    컨텐츠 안에 사진이 위치해야하는데 에디터?툴을 써야하는건가요? 사진은 한 댓글에 총 9개까지 가능
+    private String content;
 
 
-//    댓글 입력시 유저를 자동으로 넣어주게 하는 jpa 기능이 있음.
-    @OneToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+
 
 }

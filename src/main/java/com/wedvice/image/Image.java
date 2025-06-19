@@ -1,6 +1,9 @@
 package com.wedvice.image;
 
+import com.wedvice.comment.Comment;
 import jakarta.persistence.*;
+
+import static jakarta.persistence.FetchType.*;
 
 @Entity
 public class Image {
@@ -11,6 +14,10 @@ public class Image {
     private Long id;
 
     private String url;
+
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "comment_id")
+    private Comment comment;
 
 
 
