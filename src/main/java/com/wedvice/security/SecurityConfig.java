@@ -8,6 +8,7 @@ import com.wedvice.user.entity.User;
 import com.wedvice.user.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -16,6 +17,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +26,7 @@ import java.util.Map;
 
 @Configuration
 @EnableWebSecurity
+@Slf4j
 public class SecurityConfig {
 
     private final UserService userService;
@@ -42,25 +46,29 @@ public class SecurityConfig {
 
 
         http
-                .cors(cors -> cors.configurationSource(request -> {
-                    CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(List.of("http://localhost:3000"));
-                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-                    config.setAllowedHeaders(List.of("*"));
-                    config.setAllowCredentials(true);
-                    return config;
-                }))
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(exceptionHandlingFilter, JwtAuthenticationFilter.class)
+
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login/**", "/oauth2/**", "/login/oauth2/**", "/css/**", "/auth/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/login/**",
+                                "/oauth2/**",
+                                "/login/oauth2/**",
+                                "/css/**",
+                                "/auth/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**").permitAll()
                         .anyRequest().authenticated()
                 )
+
                 .oauth2Login(oauth2 -> oauth2
                                 .successHandler((request, response, authentication) -> {
                                     OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-                                    System.out.println("✅ 로그인 성공: " + oauth2User.getAttributes());
+
+                                    log.info("✅ 로그인 성공: " + oauth2User.getAttributes());
 
                                     // ✅ 카카오 사용자 정보 추출
                                     Map<String, Object> kakaoAccount = (Map<String, Object>) oauth2User.getAttributes().get("kakao_account");
@@ -77,14 +85,8 @@ public class SecurityConfig {
                                     // ✅ JWT 생성
                                     String accessToken = jwtTokenProvider.generateAccessToken(user.getId().toString(), user.getNickname(), user.getOauthId());
                                     String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(), user.getNickname(), user.getOauthId());
-                                    userService.touchRefreshToken(refreshToken, user.getId());
+                                    user.updateRefreshToken(refreshToken);
 
-//                            프론트에서 가지고있는 엑세스 토큰이 백엔드로 전달되었을 경우
-//                            1. 결과값 응답
-//                            2. 만료된 토큰일 경우 /refresh경로 타라고 말해줘야함 -> 어떤 에러코드일 경우에 백엔드한테 /refresh경로로 다시 보내라
-//                            3. 아예 잘못된 토큰일 경우
-
-//                            엑세스 토큰 받으면 Authrorization Bearer + //
                                     // ✅ JWT를 HttpOnly 쿠키에 저장 (클라이언트 JS에서 접근 불가)
                                     Cookie accessCookie = new Cookie("accessToken", accessToken);
                                     accessCookie.setHttpOnly(true);
@@ -99,13 +101,20 @@ public class SecurityConfig {
                                     response.addCookie(accessCookie);
                                     response.addCookie(refreshCookie);
 
+                                    String origin = request.getHeader("Origin");
+                                    String redirectUrl;
 
-                                    // ✅ React 대시보드로 리디렉트
-                                    response.sendRedirect("http://localhost:3000/Redirection");
+                                    if (origin != null && origin.contains("localhost")) {
+                                        redirectUrl = "http://localhost:3000/Redirection";
+                                    } else {
+                                        redirectUrl = "https://www.wedy.co.kr/Redirection";
+                                    }
+
+                                    response.sendRedirect(redirectUrl);
                                 })
                                 .failureHandler((request, response, exception) -> {
                                     System.out.println("❌ 로그인 실패: " + exception.getLocalizedMessage());
-                                    response.sendRedirect("http://localhost:3000/Redirection");
+                                    response.sendRedirect("https://www.wedy.co.kr");
                                 })
                 )
                 .logout(logout -> logout
@@ -128,5 +137,16 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:3000", "https://www.wedy.co.kr"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 
 }
