@@ -4,10 +4,10 @@ import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.security.login.JwtTokenProvider;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.entity.User;
-import com.wedvice.user.exeption.TokenInvalidException;
-import com.wedvice.user.exeption.TokenMismatchException;
-import com.wedvice.user.exeption.TokenNotFoundException;
-import com.wedvice.user.exeption.UnknownTokenException;
+import com.wedvice.user.exception.TokenInvalidException;
+import com.wedvice.user.exception.TokenMismatchException;
+import com.wedvice.user.exception.TokenNotFoundException;
+import com.wedvice.user.exception.UnknownTokenException;
 import com.wedvice.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class UserService {
 
     @Transactional
     public User saveOrGetUser(String oauthId, String provider, String nickname, String profileImageUrl) {
-        return userRepository.findByOauthIdAndProvider(oauthId, provider)
+        return userRepository.findByOauthId(oauthId)
                 .orElseGet(() -> {
                     User newUser = User.builder()
                             .oauthId(oauthId)
@@ -57,8 +57,8 @@ public class UserService {
         try {
             jwtTokenProvider.validateToken(refreshToken);
 
-            String uid = jwtTokenProvider.getUserId(refreshToken);
-            User user = userRepository.getReferenceById(Long.parseLong(uid));
+            String userId = jwtTokenProvider.getUserId(refreshToken);
+            User user = userRepository.findById(Long.parseLong(userId)).orElseThrow();
 
             String savedRefreshToken = user.getRefreshToken();
             if (!savedRefreshToken.equals(refreshToken)) {
@@ -70,7 +70,7 @@ public class UserService {
             String newRefreshToken = jwtTokenProvider.generateRefreshToken(
                     String.valueOf(user.getId()), user.getNickname(), String.valueOf(user.getOauthId()));
 
-            userRepository.updateRefreshToken(user.getId(), newRefreshToken);
+            user.updateRefreshToken(newRefreshToken);
 
             return createTokenResult(newAccessToken, newRefreshToken);
         } catch (RuntimeException e) {
@@ -115,10 +115,6 @@ public class UserService {
         return cookie.toString();
     }
 
-    @Transactional
-    public void touchRefreshToken(String refreshToken, Long id) {
-        userRepository.updateRefreshToken(id, refreshToken);
-    }
 
     public UserDto getUserInfo(Long userId) {
         User user = userRepository.getReferenceById(userId);
