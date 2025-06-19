@@ -70,7 +70,10 @@ public class User {
     public static enum Role {
 
         GROOM("신랑"),
-        BRIDE("신부");
+        BRIDE("신부"),
+        USER("매칭안된 유저"),
+        ADMIN("관리자"),
+        TOGETHER("함께");
 
         private final String message;
 

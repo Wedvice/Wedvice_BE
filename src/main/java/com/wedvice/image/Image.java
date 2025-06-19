@@ -10,6 +10,8 @@ public class Image {
     @Column(name = "image_id")
     private Long id;
 
+    private String url;
+
 
 
 }

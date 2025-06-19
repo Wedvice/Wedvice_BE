@@ -26,8 +26,17 @@ public class SubTask extends BaseEntity{
 
     private User.Role role;
 
+    private Integer price;
+
     private String contents;
 
     private LocalDate targetDate;
+
+    private boolean completed;
+
+    private String content;
+
+    @Transient
+    private boolean deleted;
 
 }

@@ -23,4 +23,7 @@ public class CoupleTask extends BaseEntity {
     @JoinColumn(name = "task_id")
     private Task task;
 
+
+    private boolean deleted;
+
 }
