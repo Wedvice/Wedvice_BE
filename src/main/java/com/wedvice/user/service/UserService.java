@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -126,6 +127,10 @@ public class UserService {
                 .createdAt(user.getCreatedAt())
                 .build();
         return userDto;
+    }
+
+    public List<UserDto> getAllUserTestExample(){
+        return userRepository.getAllUserTestExample();
     }
 }
 
