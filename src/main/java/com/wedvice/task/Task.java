@@ -18,5 +18,4 @@ public class Task extends BaseEntity {
 
 
 
-//    s3준비.
 }
