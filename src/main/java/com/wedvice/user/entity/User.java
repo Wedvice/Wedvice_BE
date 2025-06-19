@@ -61,11 +61,8 @@ public class User {
     private UserConfig userConfig;
 
     public void updateRefreshToken(String newRefreshToken) {
-        //  토큰 저장.
         this.refreshToken = newRefreshToken;
     }
-
-
     @Getter
     public static enum Role {
 

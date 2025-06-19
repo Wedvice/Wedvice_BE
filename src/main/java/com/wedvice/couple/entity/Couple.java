@@ -12,7 +12,6 @@ import java.util.List;
 @Entity
 @Table(name = "couple")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
