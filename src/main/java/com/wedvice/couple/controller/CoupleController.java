@@ -3,8 +3,10 @@ package com.wedvice.couple.controller;
 import com.wedvice.common.ApiResponse;
 import com.wedvice.couple.dto.CompleteMatchRequestDto;
 import com.wedvice.couple.dto.CoupleHomeInfoResponseDto;
+import com.wedvice.couple.dto.MatchCodeResponseDto;
 import com.wedvice.couple.dto.MatchRequestDto;
 import com.wedvice.couple.service.CoupleService;
+import com.wedvice.couple.util.MatchCodeService;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
 import io.swagger.v3.oas.annotations.Operation;
@@ -19,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Couple API", description = "💑 커플 관련 API (결혼 날짜 업데이트 등)")
 public class CoupleController {
     private final CoupleService coupleService;
-
+    private final MatchCodeService matchCodeService;
 
     @PostMapping("/match")
     public ResponseEntity<ApiResponse<?>> match(@RequestBody MatchRequestDto request, @LoginUser CustomUserDetails loginUser) {
@@ -46,6 +48,12 @@ public class CoupleController {
     public ResponseEntity<ApiResponse<CoupleHomeInfoResponseDto>> getCoupleInfo(@LoginUser CustomUserDetails loginUser) {
         CoupleHomeInfoResponseDto coupleHomeInfoResponseDto = coupleService.getCoupleInfo(loginUser.getUserId());
         return ResponseEntity.ok(ApiResponse.success(coupleHomeInfoResponseDto));
+    }
+
+    @GetMapping("/match-code")
+    public ResponseEntity<MatchCodeResponseDto> getMatchCode(@LoginUser CustomUserDetails loginUser) {
+        var responseDto = MatchCodeResponseDto.builder().matchCode(matchCodeService.generateCode(loginUser.getUserId())).build();
+        return ResponseEntity.ok(responseDto);
     }
 
 }
