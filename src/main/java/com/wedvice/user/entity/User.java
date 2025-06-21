@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -63,6 +62,20 @@ public class User {
     public void updateRefreshToken(String newRefreshToken) {
         this.refreshToken = newRefreshToken;
     }
+
+    public void matchCouple(Couple couple){
+        this.couple = couple;
+
+    }
+
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void changeRole(User.Role role) {
+        this.role = role;
+    }
+
     @Getter
     public static enum Role {
 

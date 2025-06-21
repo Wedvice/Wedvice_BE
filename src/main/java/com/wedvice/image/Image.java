@@ -2,10 +2,15 @@ package com.wedvice.image;
 
 import com.wedvice.comment.Comment;
 import jakarta.persistence.*;
+import lombok.*;
 
 import static jakarta.persistence.FetchType.*;
 
 @Entity
+@Builder
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Image {
 
     @Id
