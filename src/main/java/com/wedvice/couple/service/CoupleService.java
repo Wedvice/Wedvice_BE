@@ -1,5 +1,6 @@
 package com.wedvice.couple.service;
 
+import com.wedvice.common.exception.CustomException;
 import com.wedvice.couple.dto.CompleteMatchRequestDto;
 import com.wedvice.couple.dto.CoupleHomeInfoResponseDto;
 import com.wedvice.couple.dto.Gender;
@@ -11,6 +12,7 @@ import com.wedvice.couple.util.MatchCodeService;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,8 +42,8 @@ public class CoupleService {
 
         Couple couple = coupleRepository.save(Couple.builder().build());
 
-        user.setCouple(couple);
-        partnerUser.setCouple(couple);
+        user.matchCouple(couple);
+        partnerUser.matchCouple(couple);
 
         // 모든 로직이 정상적으로 완료된 후 코드 소모
         matchCodeService.removeCode(matchCode);
@@ -58,12 +60,22 @@ public class CoupleService {
             throw new AlreadyMatchedException();
         }
 
-        user.setNickname(requestDto.getNickName());
-        if (gender.equals(Gender.BRIDE)) {
-            user.setRole(User.Role.BRIDE);
-        } else if (gender.equals(Gender.GROOM)) {
-            user.setRole(User.Role.GROOM);
+        Optional<User> first = user.getCouple().getUsers().stream().filter(u -> !u.getId().equals(user.getId())).findFirst();
+
+        User partner = first.orElseThrow();
+
+        User.Role role = gender.equals(Gender.BRIDE) ? User.Role.BRIDE : User.Role.GROOM;
+
+        if(partner.getRole() .equals(role)) {
+            throw new SameRoleException();
         }
+
+
+
+        user.changeNickname(requestDto.getNickName());
+        user.changeRole(role);
+
+
     }
 
     //    코드 입력(couple외래키가 있냐 없냐) -> 닉네임(nickname) -> 성별(role) ->
@@ -100,6 +112,7 @@ public class CoupleService {
         User groom = user.getRole() == User.Role.GROOM ? user : partner;
         User bride = user.getRole() == User.Role.BRIDE ? user : partner;
 
+//        isPartner true -> 상대방 , false -> 자기자신
         return CoupleHomeInfoResponseDto.builder()
                 .groomDto(UserDto.of(groom, userId))
                 .brideDto(UserDto.of(bride, userId))

@@ -8,6 +8,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Component
@@ -23,6 +24,18 @@ public class MatchCodeService {
 
 
     public String generateCode(Long userId) {
+
+        Set<String> codes = codeMap.keySet();
+        boolean isExist = false;
+
+        for (String code : codes) {
+            MatchCode matchCode = codeMap.get(code);
+            if(matchCode.getUserId() == userId){
+                return code;
+            }
+        }
+
+
         String code = matchCodeGenerator.generateUniqueCode(codeMap.keySet()); // 예: 무서운아몬드123
         codeMap.put(code, new MatchCode(userId, LocalDateTime.now()));
         return code;
