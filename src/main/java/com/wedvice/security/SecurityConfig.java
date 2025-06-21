@@ -78,11 +78,10 @@ public class SecurityConfig {
                                     String oauthId = oauth2User.getAttribute("id").toString();
                                     String provider = "kakao";
 
-                                    String nickname = profile.get("nickname") != null ? profile.get("nickname").toString() : null;
                                     String profileImageUrl = profile.get("profile_image_url") != null ? profile.get("profile_image_url").toString() : null;
 
                                     // ✅ DB에 사용자 정보 저장 (이미 있으면 무시)
-                                    User user = userService.saveOrGetUser(oauthId, provider, nickname, profileImageUrl);
+                                    User user = userService.saveOrGetUser(oauthId, provider, profileImageUrl);
                                     // ✅ JWT 생성
                                     String accessToken = jwtTokenProvider.generateAccessToken(user.getId().toString(), user.getNickname(), user.getOauthId());
                                     String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(), user.getNickname(), user.getOauthId());

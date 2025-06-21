@@ -34,13 +34,12 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
-    public User saveOrGetUser(String oauthId, String provider, String nickname, String profileImageUrl) {
+    public User saveOrGetUser(String oauthId, String provider, String profileImageUrl) {
         return userRepository.findByOauthId(oauthId)
                 .orElseGet(() -> {
                     User newUser = User.builder()
                             .oauthId(oauthId)
                             .provider(provider)
-                            .nickname(nickname)
                             .profileImageUrl(profileImageUrl)
                             .build();
                     return userRepository.save(newUser);
