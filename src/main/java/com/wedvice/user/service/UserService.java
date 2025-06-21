@@ -152,9 +152,6 @@ public class UserService {
         }
 
         List<User> users = couple.getUsers();
-        if (users == null || users.size() != 2) {
-            return RedirectResponseDto.from(RedirectEnum.ONLY_COMPLETED);
-        }
 
         User partner = users.stream()
                 .filter(u -> !u.getId().equals(userId))

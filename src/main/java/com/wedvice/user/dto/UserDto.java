@@ -1,6 +1,7 @@
 package com.wedvice.user.dto;
 
 import com.querydsl.core.annotations.QueryProjection;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class UserDto {
     private Long id;
+
+    @Size(min = 2 , max = 10)
     private String nickname;
     private String profileImageUrl;
     private String memo;

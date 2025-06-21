@@ -29,7 +29,7 @@ public class User {
     @Column(nullable = false)
     private String provider;
 
-    @Column(nullable = true)
+    @Column(nullable = true, length = 10)
     private String nickname;
 
     private String profileImageUrl;
