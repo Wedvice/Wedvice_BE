@@ -1,4 +1,4 @@
-package com.wedvice.task;
+package com.wedvice.task.entity;
 
 import com.wedvice.common.BaseEntity;
 import jakarta.persistence.*;

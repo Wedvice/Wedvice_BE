@@ -1,10 +1,8 @@
-package com.wedvice.comment;
+package com.wedvice.comment.entity;
 
 import com.wedvice.common.BaseEntity;
 import com.wedvice.subtask.entity.SubTask;
-import com.wedvice.user.entity.User;
 import jakarta.persistence.*;
-import org.springframework.data.annotation.CreatedDate;
 
 import static jakarta.persistence.FetchType.*;
 

@@ -1,8 +1,8 @@
-package com.wedvice.coupletask;
+package com.wedvice.coupletask.entity;
 
 import com.wedvice.common.BaseEntity;
 import com.wedvice.couple.entity.Couple;
-import com.wedvice.task.Task;
+import com.wedvice.task.entity.Task;
 import jakarta.persistence.*;
 import lombok.*;
 

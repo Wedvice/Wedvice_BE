@@ -16,7 +16,6 @@ public class MatchCodeCleaner {
 
     @Scheduled(fixedRate = 60000) // 1분마다
     public void cleanExpiredCodes() {
-        log.info("cleanExpiredCodes active");
         matchCodeService.removeExpiredCodes();
     }
 }

@@ -1,6 +1,6 @@
-package com.wedvice.image;
+package com.wedvice.image.entity;
 
-import com.wedvice.comment.Comment;
+import com.wedvice.comment.entity.Comment;
 import jakarta.persistence.*;
 import lombok.*;
 
