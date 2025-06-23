@@ -8,13 +8,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long> , UserCustomRepository {
 
-    // ✅ 카카오 OAuth ID와 Provider를 기준으로 사용자 찾기
-    Optional<User> findByOauthIdAndProvider(String oauthId, String provider);
+    Optional<User> findByOauthId(String oauthId);
 
-    @Modifying
-    @Query("UPDATE User u SET u.refreshToken = :refreshToken WHERE u.id = :id")
-    void updateRefreshToken(@Param("id") Long id, @Param("refreshToken") String refreshToken);
 }
 

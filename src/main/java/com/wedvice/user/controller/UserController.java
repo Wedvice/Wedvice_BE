@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/user")
@@ -28,5 +29,11 @@ public class UserController {
     public ResponseEntity<ApiResponse<UserDto>> getUserInfo(@LoginUser CustomUserDetails loginUser, @Parameter(description = "사용자 ID") @PathVariable("userId") Long userId) {
         var userDto = userService.getUserInfo(userId);
         return ResponseEntity.ok(ApiResponse.success(userDto));
+    }
+
+    @GetMapping
+    public List<UserDto> getAllUserTestExample(){
+
+        return userService.getAllUserTestExample();
     }
 }

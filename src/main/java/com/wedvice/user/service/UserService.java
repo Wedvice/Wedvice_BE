@@ -9,10 +9,10 @@ import com.wedvice.security.login.RedirectEnum;
 import com.wedvice.security.login.RedirectResponseDto;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.entity.User;
-import com.wedvice.user.exeption.TokenInvalidException;
-import com.wedvice.user.exeption.TokenMismatchException;
-import com.wedvice.user.exeption.TokenNotFoundException;
-import com.wedvice.user.exeption.UnknownTokenException;
+import com.wedvice.user.exception.TokenInvalidException;
+import com.wedvice.user.exception.TokenMismatchException;
+import com.wedvice.user.exception.TokenNotFoundException;
+import com.wedvice.user.exception.UnknownTokenException;
 import com.wedvice.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
@@ -34,13 +34,12 @@ public class UserService {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
-    public User saveOrGetUser(String oauthId, String provider, String nickname, String profileImageUrl) {
-        return userRepository.findByOauthIdAndProvider(oauthId, provider)
+    public User saveOrGetUser(String oauthId, String provider, String profileImageUrl) {
+        return userRepository.findByOauthId(oauthId)
                 .orElseGet(() -> {
                     User newUser = User.builder()
                             .oauthId(oauthId)
                             .provider(provider)
-                            .nickname(nickname)
                             .profileImageUrl(profileImageUrl)
                             .build();
                     return userRepository.save(newUser);
@@ -63,8 +62,8 @@ public class UserService {
         try {
             jwtTokenProvider.validateToken(refreshToken);
 
-            String uid = jwtTokenProvider.getUserId(refreshToken);
-            User user = userRepository.getReferenceById(Long.parseLong(uid));
+            String userId = jwtTokenProvider.getUserId(refreshToken);
+            User user = userRepository.findById(Long.parseLong(userId)).orElseThrow();
 
             String savedRefreshToken = user.getRefreshToken();
             if (!savedRefreshToken.equals(refreshToken)) {
@@ -76,7 +75,7 @@ public class UserService {
             String newRefreshToken = jwtTokenProvider.generateRefreshToken(
                     String.valueOf(user.getId()), user.getNickname(), String.valueOf(user.getOauthId()));
 
-            userRepository.updateRefreshToken(user.getId(), newRefreshToken);
+            user.updateRefreshToken(newRefreshToken);
 
             return createTokenResult(newAccessToken, newRefreshToken);
         } catch (RuntimeException e) {
@@ -121,10 +120,6 @@ public class UserService {
         return cookie.toString();
     }
 
-    @Transactional
-    public void touchRefreshToken(String refreshToken, Long id) {
-        userRepository.updateRefreshToken(id, refreshToken);
-    }
 
     public UserDto getUserInfo(Long userId) {
         User user = userRepository.getReferenceById(userId);
@@ -136,6 +131,10 @@ public class UserService {
                 .createdAt(user.getCreatedAt())
                 .build();
         return userDto;
+    }
+
+    public List<UserDto> getAllUserTestExample(){
+        return userRepository.getAllUserTestExample();
     }
 
     public RedirectResponseDto getRedirectStatus(Long userId) {
@@ -152,9 +151,6 @@ public class UserService {
         }
 
         List<User> users = couple.getUsers();
-        if (users == null || users.size() != 2) {
-            return RedirectResponseDto.from(RedirectEnum.ONLY_COMPLETED);
-        }
 
         User partner = users.stream()
                 .filter(u -> !u.getId().equals(userId))

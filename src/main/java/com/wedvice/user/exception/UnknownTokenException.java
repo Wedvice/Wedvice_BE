@@ -1,4 +1,4 @@
-package com.wedvice.user.exeption;
+package com.wedvice.user.exception;
 
 import com.wedvice.common.exception.CustomException;
 import org.springframework.http.HttpStatus;

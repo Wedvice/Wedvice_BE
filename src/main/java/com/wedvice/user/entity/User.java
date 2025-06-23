@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -29,7 +28,7 @@ public class User {
     @Column(nullable = false)
     private String provider;
 
-    @Column(nullable = true)
+    @Column(nullable = true, length = 10)
     private String nickname;
 
     private String profileImageUrl;
@@ -61,16 +60,30 @@ public class User {
     private UserConfig userConfig;
 
     public void updateRefreshToken(String newRefreshToken) {
-        //  토큰 저장.
         this.refreshToken = newRefreshToken;
     }
 
+    public void matchCouple(Couple couple){
+        this.couple = couple;
+
+    }
+
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void changeRole(User.Role role) {
+        this.role = role;
+    }
 
     @Getter
     public static enum Role {
 
         GROOM("신랑"),
-        BRIDE("신부");
+        BRIDE("신부"),
+        USER("매칭안된 유저"),
+        ADMIN("관리자"),
+        TOGETHER("함께");
 
         private final String message;
 
