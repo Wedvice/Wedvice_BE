@@ -9,6 +9,7 @@ import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.*;
 import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.couple.util.MatchCodeService;
+import com.wedvice.coupletask.service.CoupleTaskService;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class CoupleService {
     private final CoupleRepository coupleRepository;
     private final MatchCodeService matchCodeService;
     private final UserRepository userRepository;
+    private final CoupleTaskService coupleTaskService;
 
 
     @Transactional
@@ -44,6 +46,14 @@ public class CoupleService {
 
         user.matchCouple(couple);
         partnerUser.matchCouple(couple);
+
+//     커플 생성될 때 기본 task ,subtask 매핑
+
+        if (!coupleTaskService.isCoupleHavingTasks(couple)) {
+
+            coupleTaskService.createCoupleWithTasks(couple);
+        }
+
 
         // 모든 로직이 정상적으로 완료된 후 코드 소모
         matchCodeService.removeCode(matchCode);
