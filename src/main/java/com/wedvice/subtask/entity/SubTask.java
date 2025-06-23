@@ -1,7 +1,7 @@
 package com.wedvice.subtask.entity;
 
 import com.wedvice.common.BaseEntity;
-import com.wedvice.coupletask.CoupleTask;
+import com.wedvice.coupletask.entity.CoupleTask;
 import com.wedvice.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,6 +33,7 @@ public class SubTask extends BaseEntity{
 
     private String displayName;
 
+    @Enumerated(EnumType.STRING)
     private User.Role role;
 
     private Integer price;
