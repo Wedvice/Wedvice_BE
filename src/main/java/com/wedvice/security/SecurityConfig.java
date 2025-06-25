@@ -66,56 +66,69 @@ public class SecurityConfig {
                 )
 
                 .oauth2Login(oauth2 -> oauth2
-                                .successHandler((request, response, authentication) -> {
-                                    OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+                        .successHandler((request, response, authentication) -> {
+                            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
 
-                                    log.info("✅ 로그인 성공: " + oauth2User.getAttributes());
+                            log.info("✅ 로그인 성공: " + oauth2User.getAttributes());
 
-                                    // ✅ 카카오 사용자 정보 추출
-                                    Map<String, Object> kakaoAccount = (Map<String, Object>) oauth2User.getAttributes().get("kakao_account");
-                                    Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+                            // ✅ 카카오 사용자 정보 추출
+                            Map<String, Object> kakaoAccount = (Map<String, Object>) oauth2User.getAttributes().get("kakao_account");
+                            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
 
-                                    String oauthId = oauth2User.getAttribute("id").toString();
-                                    String provider = "kakao";
+                            String oauthId = oauth2User.getAttribute("id").toString();
+                            String provider = "kakao";
 
-                                    String profileImageUrl = profile.get("profile_image_url") != null ? profile.get("profile_image_url").toString() : null;
+                            String profileImageUrl = profile.get("profile_image_url") != null ? profile.get("profile_image_url").toString() : null;
 
-                                    // ✅ DB에 사용자 정보 저장 (이미 있으면 무시)
-                                    User user = userService.saveOrGetUser(oauthId, provider, profileImageUrl);
-                                    // ✅ JWT 생성
-                                    String accessToken = jwtTokenProvider.generateAccessToken(user.getId().toString(), user.getNickname(), user.getOauthId());
-                                    String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(), user.getNickname(), user.getOauthId());
-                                    user.updateRefreshToken(refreshToken);
+                            // ✅ DB에 사용자 정보 저장 (이미 있으면 무시)
+                            User user = userService.saveOrGetUser(oauthId, provider, profileImageUrl);
+                            // ✅ JWT 생성
+                            String accessToken = jwtTokenProvider.generateAccessToken(user.getId().toString(), user.getNickname(), user.getOauthId());
+                            String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(), user.getNickname(), user.getOauthId());
+                            user.updateRefreshToken(refreshToken);
 
-                                    // ✅ JWT를 HttpOnly 쿠키에 저장 (클라이언트 JS에서 접근 불가)
-                                    Cookie accessCookie = new Cookie("accessToken", accessToken);
-                                    accessCookie.setHttpOnly(true);
-                                    accessCookie.setPath("/");
-                                    accessCookie.setMaxAge(60 * 30); // 30분
+                            // ✅ JWT를 HttpOnly 쿠키에 저장 (클라이언트 JS에서 접근 불가)
+                            Cookie accessCookie = new Cookie("accessToken", accessToken);
+                            accessCookie.setHttpOnly(false);
+                            accessCookie.setPath("/");
+                            accessCookie.setMaxAge(60 * 30); // 30분
 
-                                    Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
-                                    refreshCookie.setHttpOnly(true);
-                                    refreshCookie.setPath("/");
-                                    refreshCookie.setMaxAge(60 * 60 * 24 * 14); // 14일
+                            Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
+                            refreshCookie.setHttpOnly(true);
+                            refreshCookie.setPath("/");
+                            refreshCookie.setMaxAge(60 * 60 * 24 * 14); // 14일
 
-                                    response.addCookie(accessCookie);
-                                    response.addCookie(refreshCookie);
+                            response.addCookie(accessCookie);
+                            response.addCookie(refreshCookie);
 
-                                    String origin = request.getHeader("Origin");
-                                    String redirectUrl;
+                            String host = request.getHeader("Host");
+                            String referer = request.getHeader("Referer");
 
-                                    if (origin != null && origin.contains("localhost")) {
-                                        redirectUrl = "http://localhost:3000/Redirection";
-                                    } else {
-                                        redirectUrl = "https://www.wedy.co.kr/Redirection";
-                                    }
+                            String redirectUrl;
 
-                                    response.sendRedirect(redirectUrl);
-                                })
-                                .failureHandler((request, response, exception) -> {
-                                    System.out.println("❌ 로그인 실패: " + exception.getLocalizedMessage());
-                                    response.sendRedirect("https://www.wedy.co.kr");
-                                })
+                            if ((host != null && host.contains("localhost")) ||
+                                    (referer != null && referer.contains("localhost"))) {
+                                redirectUrl = "http://localhost:3000/Redirection";
+                            } else {
+                                redirectUrl = "https://www.wedy.co.kr/Redirection";
+                            }
+                            response.sendRedirect(redirectUrl);
+                        })
+                        .failureHandler((request, response, exception) -> {
+                            log.info("❌ 로그인 실패: {}", exception.getLocalizedMessage());
+                            String host = request.getHeader("Host");
+                            String referer = request.getHeader("Referer");
+
+                            String redirectUrl;
+
+                            if ((host != null && host.contains("localhost")) ||
+                                    (referer != null && referer.contains("localhost"))) {
+                                redirectUrl = "http://localhost:3000/Redirection";
+                            } else {
+                                redirectUrl = "https://www.wedy.co.kr/Redirection";
+                            }
+                            response.sendRedirect(redirectUrl);
+                        })
                 )
                 .logout(logout -> logout
                         .logoutUrl("/auth/logout")
