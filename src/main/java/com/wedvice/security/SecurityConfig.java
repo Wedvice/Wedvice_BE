@@ -87,12 +87,24 @@ public class SecurityConfig {
                             String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(), user.getNickname(), user.getOauthId());
                             user.updateRefreshToken(refreshToken);
 
-                            // ✅ JWT를 HttpOnly 쿠키에 저장 (클라이언트 JS에서 접근 불가)
                             Cookie accessCookie = new Cookie("accessToken", accessToken);
-                            accessCookie.setHttpOnly(false);
+                            accessCookie.setHttpOnly(false);        // JS에서 읽을 수 있도록
                             accessCookie.setPath("/");
-                            accessCookie.setMaxAge(60 * 30); // 30분
+                            accessCookie.setMaxAge(60 * 30);        // 30분 유효
+                            String referer = request.getHeader("Referer");
+                            boolean isLocalhost = referer != null && referer.contains("localhost");
+                            if (isLocalhost) {
+                                // ✅ 개발 환경 (localhost → HTTP, 쿠키 조건 완화)
+                                accessCookie.setSecure(false);      // HTTPS 아님
+                                // Domain 생략 (localhost는 지정하면 안 됨)
+                            } else {
+                                // ✅ 운영 환경 (wedy.co.kr → HTTPS, 보안 적용)
+                                accessCookie.setSecure(true);       // HTTPS 전용
+                                accessCookie.setDomain("wedy.co.kr"); // 명시적 도메인
+                                // SameSite=None 필요하지만 Java Cookie API에는 없음 → 아래 참고
+                            }
 
+                            response.addCookie(accessCookie);
                             Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
                             refreshCookie.setHttpOnly(true);
                             refreshCookie.setPath("/");
