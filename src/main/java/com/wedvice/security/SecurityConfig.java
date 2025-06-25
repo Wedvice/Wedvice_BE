@@ -112,6 +112,9 @@ public class SecurityConfig {
                             } else {
                                 redirectUrl = "https://www.wedy.co.kr/Redirection";
                             }
+                            log.info("[success] host {}", host);
+                            log.info("[success] referer {}", referer);
+                            log.info("[success] redirectUrl {}", redirectUrl);
                             response.sendRedirect(redirectUrl);
                         })
                         .failureHandler((request, response, exception) -> {
@@ -127,6 +130,11 @@ public class SecurityConfig {
                             } else {
                                 redirectUrl = "https://www.wedy.co.kr/Redirection";
                             }
+
+
+                            log.info("[fail] host {}", host);
+                            log.info("[fail] referer {}", referer);
+                            log.info("[fail] redirectUrl {}", redirectUrl);
                             response.sendRedirect(redirectUrl);
                         })
                 )
