@@ -6,7 +6,6 @@ import com.wedvice.security.login.JwtAuthenticationFilter;
 import com.wedvice.security.login.JwtTokenProvider;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.service.UserService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -87,43 +86,37 @@ public class SecurityConfig {
                             String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(), user.getNickname(), user.getOauthId());
                             user.updateRefreshToken(refreshToken);
 
-                            Cookie accessCookie = new Cookie("accessToken", accessToken);
-                            accessCookie.setHttpOnly(false);        // JS에서 읽을 수 있도록
-                            accessCookie.setPath("/");
-                            accessCookie.setMaxAge(60 * 30);        // 30분 유효
+
+                            // 환경 판단
                             String referer = request.getHeader("Referer");
                             boolean isLocalhost = referer != null && referer.contains("localhost");
-                            if (isLocalhost) {
-                                // ✅ 개발 환경 (localhost → HTTP, 쿠키 조건 완화)
-                                accessCookie.setSecure(false);      // HTTPS 아님
-                                // Domain 생략 (localhost는 지정하면 안 됨)
-                            } else {
-                                // ✅ 운영 환경 (wedy.co.kr → HTTPS, 보안 적용)
-                                accessCookie.setSecure(true);       // HTTPS 전용
-                                accessCookie.setDomain("wedy.co.kr"); // 명시적 도메인
-                                // SameSite=None 필요하지만 Java Cookie API에는 없음 → 아래 참고
+
+                            // ✅ Set-Cookie 헤더 직접 설정
+                            StringBuilder accessCookie = new StringBuilder();
+                            accessCookie.append("accessToken=").append(accessToken)
+                                    .append("; Path=/")
+                                    .append("; Max-Age=1800");
+                            if (!isLocalhost) {
+                                accessCookie.append("; Secure; SameSite=None; Domain=wedy.co.kr");
                             }
 
-                            response.addCookie(accessCookie);
-                            Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
-                            refreshCookie.setHttpOnly(true);
-                            refreshCookie.setPath("/");
-                            refreshCookie.setMaxAge(60 * 60 * 24 * 14); // 14일
+                            StringBuilder refreshCookie = new StringBuilder();
+                            refreshCookie.append("refreshToken=").append(refreshToken)
+                                    .append("; Path=/")
+                                    .append("; Max-Age=").append(60 * 60 * 24 * 14)
+                                    .append("; HttpOnly");
+                            if (!isLocalhost) {
+                                refreshCookie.append("; Secure; SameSite=None; Domain=wedy.co.kr");
+                            }
 
-                            response.addCookie(accessCookie);
-                            response.addCookie(refreshCookie);
+                            response.addHeader("Set-Cookie", accessCookie.toString());
+                            response.addHeader("Set-Cookie", refreshCookie.toString());
 
+                            // ✅ 리다이렉트 처리
                             String host = request.getHeader("Host");
-                            String referer = request.getHeader("Referer");
-
-                            String redirectUrl;
-
-                            if ((host != null && host.contains("localhost")) ||
-                                    (referer != null && referer.contains("localhost"))) {
-                                redirectUrl = "http://localhost:3000/Redirection";
-                            } else {
-                                redirectUrl = "https://www.wedy.co.kr/Redirection";
-                            }
+                            String redirectUrl = (host != null && host.contains("localhost") || referer != null && referer.contains("localhost"))
+                                    ? "http://localhost:3000/Redirection"
+                                    : "https://www.wedy.co.kr/Redirection";
                             log.info("[success] host {}", host);
                             log.info("[success] referer {}", referer);
                             log.info("[success] redirectUrl {}", redirectUrl);
@@ -147,6 +140,7 @@ public class SecurityConfig {
                             log.info("[fail] host {}", host);
                             log.info("[fail] referer {}", referer);
                             log.info("[fail] redirectUrl {}", redirectUrl);
+
                             response.sendRedirect(redirectUrl);
                         })
                 )
