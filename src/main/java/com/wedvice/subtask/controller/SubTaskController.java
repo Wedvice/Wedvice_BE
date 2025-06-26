@@ -3,6 +3,7 @@ package com.wedvice.subtask.controller;
 import com.wedvice.common.ApiResponse;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
+import com.wedvice.subtask.dto.CompleteRateResponseDto;
 import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
 import com.wedvice.subtask.service.SubTaskService;
@@ -71,6 +72,13 @@ public class SubTaskController {
             @PageableDefault(size = 10) Pageable pageable
     ) {
         Slice<SubTaskHomeResponseDto> responseDto = subTaskService.getHomeSubTasks(loginUser.getUserId(), completed, role, pageable, top3, sort);
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
+    }
+
+    @GetMapping("/progress")
+    @Operation(summary = "완료율 조회", description = "커플의 전체 SubTask 완료율을 조회합니다.")
+    public ResponseEntity<ApiResponse<CompleteRateResponseDto>> getProgress(@LoginUser CustomUserDetails loginUser) {
+        CompleteRateResponseDto responseDto = subTaskService.getProgressRate(loginUser.getUserId());
         return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
 }

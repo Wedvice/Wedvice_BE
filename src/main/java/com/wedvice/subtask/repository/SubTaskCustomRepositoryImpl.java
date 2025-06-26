@@ -4,6 +4,7 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.wedvice.subtask.dto.CompleteRateResponseDto;
 import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
 import com.wedvice.user.entity.User;
@@ -110,6 +111,47 @@ public class SubTaskCustomRepositoryImpl implements SubTaskCustomRepository {
         }
 
         return new SliceImpl<>(results, pageable, hasNext);
+    }
+
+    @Override
+    public CompleteRateResponseDto getProgressRate(Long userId) {
+        // 커플 ID 조회
+        Long coupleId = queryFactory
+                .select(user.couple.id)
+                .from(user)
+                .where(user.id.eq(userId))
+                .fetchOne();
+
+        if (coupleId == null) {
+            return new CompleteRateResponseDto(0, 0, 0);
+        }
+
+        // 전체 SubTask 개수
+        Long total = queryFactory
+                .select(subTask.count())
+                .from(subTask)
+                .join(subTask.coupleTask, coupleTask)
+                .where(coupleTask.couple.id.eq(coupleId))
+                .fetchOne();
+
+        if (total == null || total == 0) {
+            return new CompleteRateResponseDto(0, 0, 0);
+        }
+
+        // 완료된 SubTask 개수
+        Long completed = queryFactory
+                .select(subTask.count())
+                .from(subTask)
+                .join(subTask.coupleTask, coupleTask)
+                .where(
+                        coupleTask.couple.id.eq(coupleId),
+                        subTask.completed.isTrue()
+                )
+                .fetchOne();
+
+        int percent = (int) Math.round((completed * 100.0) / total);
+
+        return new CompleteRateResponseDto(percent, completed, total);
     }
 
     private OrderSpecifier<?>[] getOrderSpecifiers(String sortType, boolean top3) {

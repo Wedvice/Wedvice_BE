@@ -1,5 +1,6 @@
 package com.wedvice.subtask.repository;
 
+import com.wedvice.subtask.dto.CompleteRateResponseDto;
 import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
 import com.wedvice.user.entity.User;
@@ -17,4 +18,6 @@ public interface SubTaskCustomRepository {
                                                               boolean top3,
                                                               User.Role role, String sortType,
                                                               Pageable pageable);
+
+    CompleteRateResponseDto getProgressRate(Long userId);
 }

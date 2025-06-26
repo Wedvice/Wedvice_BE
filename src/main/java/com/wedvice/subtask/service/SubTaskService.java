@@ -1,6 +1,7 @@
 package com.wedvice.subtask.service;
 
 import com.wedvice.coupletask.entity.CoupleTask;
+import com.wedvice.subtask.dto.CompleteRateResponseDto;
 import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
 import com.wedvice.subtask.entity.SubTask;
@@ -74,5 +75,9 @@ public class SubTaskService {
         } catch (IllegalArgumentException e) {
             throw new NotExistRoleException();
         }
+    }
+
+    public CompleteRateResponseDto getProgressRate(Long userId) {
+        return subTaskRepository.getProgressRate(userId);
     }
 }
