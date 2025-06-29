@@ -3,6 +3,7 @@ package com.wedvice.user.controller;
 import com.wedvice.common.ApiResponse;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
+import com.wedvice.user.dto.MemoRequestDto;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,10 +11,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -32,8 +31,15 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserDto> getAllUserTestExample(){
+    public List<UserDto> getAllUserTestExample() {
 
         return userService.getAllUserTestExample();
+    }
+
+    @PatchMapping("/memo")
+    @Operation(summary = "메모 수정", description = "메모 정보 수정")
+    public ResponseEntity<ApiResponse<Void>> updateMemo(@LoginUser CustomUserDetails loginUser, MemoRequestDto requestDto) {
+        userService.updateMemo(loginUser.getUserId(), requestDto);
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }
