@@ -7,6 +7,7 @@ import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.security.login.JwtTokenProvider;
 import com.wedvice.security.login.RedirectEnum;
 import com.wedvice.security.login.RedirectResponseDto;
+import com.wedvice.user.dto.MemoRequestDto;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.exception.TokenInvalidException;
@@ -133,7 +134,7 @@ public class UserService {
         return userDto;
     }
 
-    public List<UserDto> getAllUserTestExample(){
+    public List<UserDto> getAllUserTestExample() {
         return userRepository.getAllUserTestExample();
     }
 
@@ -164,6 +165,13 @@ public class UserService {
         return RedirectResponseDto.from(RedirectEnum.PAIR_COMPLETED);
     }
 
+    @Transactional
+    public void updateMemo(Long userId, MemoRequestDto requestDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(InvalidUserAccessException::new);
+
+        user.updateMemo(requestDto.getMemo());
+    }
 }
 
 

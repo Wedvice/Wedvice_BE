@@ -2,8 +2,10 @@ package com.wedvice.task.entity;
 
 import com.wedvice.common.BaseEntity;
 import jakarta.persistence.*;
+import lombok.Getter;
 
 @Entity
+@Getter
 public class Task extends BaseEntity {
 
 
@@ -15,7 +17,6 @@ public class Task extends BaseEntity {
 
     @Column(nullable = false)
     private String title;
-
 
 
 }

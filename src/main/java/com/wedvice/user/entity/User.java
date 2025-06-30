@@ -3,7 +3,10 @@ package com.wedvice.user.entity;
 import com.wedvice.couple.entity.Couple;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -63,7 +66,7 @@ public class User {
         this.refreshToken = newRefreshToken;
     }
 
-    public void matchCouple(Couple couple){
+    public void matchCouple(Couple couple) {
         this.couple = couple;
 
     }
@@ -74,6 +77,10 @@ public class User {
 
     public void changeRole(User.Role role) {
         this.role = role;
+    }
+
+    public void updateMemo(String memo) {
+        this.memo = memo;
     }
 
     @Getter
