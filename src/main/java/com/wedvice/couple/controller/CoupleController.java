@@ -15,7 +15,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,11 +29,12 @@ public class CoupleController {
 
     //    api response 통일 안된거 체크.
     @GetMapping("/match-code")
-    public ResponseEntity<MatchCodeResponseDto> getMatchCode(@LoginUser CustomUserDetails loginUser) {
+    public ResponseEntity<ApiResponse<MatchCodeResponseDto>> getMatchCode(@LoginUser CustomUserDetails loginUser) {
 
         var responseDto = MatchCodeResponseDto.builder().matchCode(matchCodeService.generateCode(loginUser.getUserId())).build();
-        return ResponseEntity.ok(responseDto);
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
+
     @PostMapping("/match")
     public ResponseEntity<ApiResponse<?>> match(@Validated @RequestBody MatchRequestDto request, @LoginUser CustomUserDetails loginUser) {
         long userId = loginUser.getUserId();
@@ -63,7 +63,4 @@ public class CoupleController {
         CoupleHomeInfoResponseDto coupleHomeInfoResponseDto = coupleService.getCoupleInfo(loginUser.getUserId());
         return ResponseEntity.ok(ApiResponse.success(coupleHomeInfoResponseDto));
     }
-
-
-
 }
