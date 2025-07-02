@@ -63,8 +63,8 @@ public class SubTaskController {
   public ResponseEntity<ApiResponse<Slice<SubTaskHomeResponseDto>>> getHomeSubtask(
       @LoginUser CustomUserDetails loginUser,
 
-      @Parameter(description = "완료 여부 (true = 완료, false = 남은)", required = true)
-      @RequestParam boolean completed,
+      @Parameter(description = "완료 여부 (true = 완료, false = 남은, null = 전부 조회)", required = false)
+      @RequestParam(required = false) Boolean completed,
 
       @Parameter(description = "top3 여부 (true면 상위 3개만 반환)", required = false)
       @RequestParam(defaultValue = "false") boolean top3,
@@ -72,8 +72,8 @@ public class SubTaskController {
       @Parameter(description = "정렬 기준 설정", required = false)
       @RequestParam(defaultValue = "date") String sort,
 
-      @Parameter(description = "", required = true)
-      @RequestParam String role,
+      @Parameter(description = "역할 (TOGETHER = 함께, BRIDE = 신부, GROOM = 신부, null = 전부 조회)", required = false)
+      @RequestParam(required = false) String role,
 
       @ParameterObject // Swagger에서 page, size, sort
       @PageableDefault(size = 10) Pageable pageable
