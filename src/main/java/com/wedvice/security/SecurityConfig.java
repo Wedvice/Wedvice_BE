@@ -116,6 +116,7 @@ public class SecurityConfig {
                       }
                     }
                   }
+
                   // ✅ 리다이렉션 쿠키 삭제
                   ResponseCookie deleteCookie = ResponseCookie.from("loginRedirectUrl", "")
                       .path("/")
@@ -159,7 +160,10 @@ public class SecurityConfig {
 
                   // ✅ 리다이렉트 처리
                   String host = request.getHeader("Host");
-
+                  // ✅ 쿼리스트링에 accessToken만 추가 (로컬일 때만)
+                  if (isLocalhost) {
+                    redirectUrl += "?accessToken=" + accessToken;
+                  }
                   log.info("[success] host {}", host);
                   log.info("[success] redirectUrl {}", redirectUrl);
                   response.sendRedirect(redirectUrl);
