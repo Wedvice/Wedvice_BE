@@ -73,110 +73,117 @@ public class SecurityConfig {
         )
 
         .oauth2Login(oauth2 -> oauth2
-                .loginPage("/custom/redirect-to-oauth")
-                .authorizationEndpoint(auth -> auth.baseUri("/oauth2/authorization"))
-                .successHandler((request, response, authentication) -> {
-                  OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
-                  log.info("✅ 로그인 성공: " + oauth2User.getAttributes());
+            .loginPage("/custom/redirect-to-oauth")
+            .authorizationEndpoint(auth -> auth.baseUri("/oauth2/authorization"))
+            .successHandler((request, response, authentication) -> {
+              OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+              log.info("✅ 로그인 성공: " + oauth2User.getAttributes());
 
-                  // ✅ 카카오 사용자 정보 추출
-                  Map<String, Object> kakaoAccount = (Map<String, Object>) oauth2User.getAttributes()
-                      .get("kakao_account");
-                  Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+              // ✅ 카카오 사용자 정보 추출
+              Map<String, Object> kakaoAccount = (Map<String, Object>) oauth2User.getAttributes()
+                  .get("kakao_account");
+              Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
 
-                  String oauthId = oauth2User.getAttribute("id").toString();
-                  String provider = "kakao";
+              String oauthId = oauth2User.getAttribute("id").toString();
+              String provider = "kakao";
 
-                  String profileImageUrl =
-                      profile.get("profile_image_url") != null ? profile.get("profile_image_url")
-                          .toString() : null;
+              String profileImageUrl =
+                  profile.get("profile_image_url") != null ? profile.get("profile_image_url")
+                      .toString() : null;
 
-                  // ✅ DB에 사용자 정보 저장 (이미 있으면 무시)
-                  User user = userService.saveOrGetUser(oauthId, provider, profileImageUrl);
-                  // ✅ JWT 생성
-                  String accessToken = jwtTokenProvider.generateAccessToken(user.getId().toString(),
-                      user.getNickname(), user.getOauthId());
-                  String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(),
-                      user.getNickname(), user.getOauthId());
-                  user.updateRefreshToken(refreshToken);
+              // ✅ DB에 사용자 정보 저장 (이미 있으면 무시)
+              User user = userService.saveOrGetUser(oauthId, provider, profileImageUrl);
+              // ✅ JWT 생성
+              String accessToken = jwtTokenProvider.generateAccessToken(user.getId().toString(),
+                  user.getNickname(), user.getOauthId());
+              String refreshToken = jwtTokenProvider.generateRefreshToken(user.getId().toString(),
+                  user.getNickname(), user.getOauthId());
+              user.updateRefreshToken(refreshToken);
 
-                  // ✅ 리다이렉션 URL 쿠키에서 추출
-                  String redirectUrl = "https://www.wedy.co.kr"; // fallback
-                  boolean isLocalhost = false;
-                  Cookie[] cookies = request.getCookies();
-                  if (cookies != null) {
-                    for (Cookie cookie : cookies) {
-                      if ("loginRedirectUrl".equals(cookie.getName())) {
-                        redirectUrl = cookie.getValue();
-                        if (redirectUrl.contains("localhost")) {
-                          log.info("[successHandler 쿠키] {} {}", cookie.getName(), cookie.getValue());
-                          isLocalhost = true;
-                        }
-                        break;
-                      }
+              // ✅ 리다이렉션 URL 쿠키에서 추출
+              String redirectUrl = "https://www.wedy.co.kr"; // fallback
+              boolean isLocalhost = false;
+              Cookie[] cookies = request.getCookies();
+              if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                  if ("loginRedirectUrl".equals(cookie.getName())) {
+                    redirectUrl = cookie.getValue();
+                    if (redirectUrl.contains("localhost")) {
+                      log.info("[successHandler 쿠키] {} {}", cookie.getName(), cookie.getValue());
+                      isLocalhost = true;
                     }
+                    break;
                   }
-                  // ✅ 리다이렉션 쿠키 삭제
-                  ResponseCookie deleteCookie = ResponseCookie.from("loginRedirectUrl", "")
-                      .path("/")
-                      .httpOnly(true)
-                      .secure(true)
-                      .sameSite("Lax")
-                      .maxAge(0)
-                      .build();
-                  response.addHeader("Set-Cookie", deleteCookie.toString());
+                }
+              }
+              // ✅ 리다이렉션 쿠키 삭제
+              ResponseCookie deleteCookie = ResponseCookie.from("loginRedirectUrl", "")
+                  .path("/")
+                  .httpOnly(true)
+                  .secure(true)
+                  .sameSite("Lax")
+                  .maxAge(0)
+                  .build();
+              response.addHeader("Set-Cookie", deleteCookie.toString());
 
-                  // ✅ Set-Cookie 헤더 직접 설정
-                  StringBuilder accessCookie = new StringBuilder();
-                  // ✅ accessToken 쿠키
-                  ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", accessToken)
-                      .path("/")
-                      .maxAge(Duration.ofMinutes(5))
-                      .httpOnly(false) // access는 FE가 읽을 수 있어야 함
-                      .sameSite(isLocalhost ? "Lax" : "None")
-                      .secure(!isLocalhost)
-                      .domain(isLocalhost ? null : "wedy.co.kr")
-                      .build();
+              // ✅ accessToken 쿠키 설정
+              ResponseCookie.ResponseCookieBuilder accessTokenCookieBuilder = ResponseCookie.from(
+                      "accessToken", accessToken)
+                  .path("/")
+                  .maxAge(Duration.ofMinutes(5))
+                  .httpOnly(false) // FE가 읽어야 하므로 false
+                  .sameSite(isLocalhost ? "Lax" : "None")
+                  .secure(!isLocalhost);
 
-// ✅ refreshToken 쿠키
-                  ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
-                      .path("/")
-                      .maxAge(Duration.ofDays(14))
-                      .httpOnly(true)
-                      .sameSite(isLocalhost ? "Lax" : "None")
-                      .secure(!isLocalhost)
-                      .domain(isLocalhost ? null : "wedy.co.kr")
-                      .build();
-                  response.addHeader("Set-Cookie", accessTokenCookie.toString());
-                  response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+              if (!isLocalhost) {
+                accessTokenCookieBuilder.domain("wedy.co.kr");
+              }
+              ResponseCookie accessTokenCookie = accessTokenCookieBuilder.build();
 
-                  // ✅ 리다이렉트 처리
-                  String host = request.getHeader("Host");
+              // ✅ refreshToken 쿠키 설정
+              ResponseCookie.ResponseCookieBuilder refreshTokenCookieBuilder = ResponseCookie.from(
+                      "refreshToken", refreshToken)
+                  .path("/")
+                  .maxAge(Duration.ofDays(14))
+                  .httpOnly(true) // FE에서 접근 못하게
+                  .sameSite(isLocalhost ? "Lax" : "None")
+                  .secure(!isLocalhost);
 
-                  log.info("[success] host {}", host);
-                  log.info("[success] redirectUrl {}", redirectUrl);
-                  response.sendRedirect(redirectUrl);
-                })
-                .failureHandler((request, response, exception) -> {
-                  log.info("❌ 로그인 실패: {}", exception.getLocalizedMessage());
-                  String host = request.getHeader("Host");
-                  String referer = request.getHeader("Referer");
+              if (!isLocalhost) {
+                refreshTokenCookieBuilder.domain("wedy.co.kr");
+              }
+              ResponseCookie refreshTokenCookie = refreshTokenCookieBuilder.build();
 
-                  String redirectUrl;
+              response.addHeader("Set-Cookie", accessTokenCookie.toString());
+              response.addHeader("Set-Cookie", refreshTokenCookie.toString());
 
-                  if ((host != null && host.contains("localhost")) ||
-                      (referer != null && referer.contains("localhost"))) {
-                    redirectUrl = "http://localhost:3000/Redirection";
-                  } else {
-                    redirectUrl = "https://www.wedy.co.kr/Redirection";
-                  }
+              // ✅ 리다이렉트 처리
+              String host = request.getHeader("Host");
 
-                  log.info("[fail] host {}", host);
-                  log.info("[fail] referer {}", referer);
-                  log.info("[fail] redirectUrl {}", redirectUrl);
+              log.info("[success] host {}", host);
+              log.info("[success] redirectUrl {}", redirectUrl);
+              response.sendRedirect(redirectUrl);
+            })
+            .failureHandler((request, response, exception) -> {
+              log.info("❌ 로그인 실패: {}", exception.getLocalizedMessage());
+              String host = request.getHeader("Host");
+              String referer = request.getHeader("Referer");
 
-                  response.sendRedirect(redirectUrl);
-                })
+              String redirectUrl;
+
+              if ((host != null && host.contains("localhost")) ||
+                  (referer != null && referer.contains("localhost"))) {
+                redirectUrl = "http://localhost:3000/Redirection";
+              } else {
+                redirectUrl = "https://www.wedy.co.kr/Redirection";
+              }
+
+              log.info("[fail] host {}", host);
+              log.info("[fail] referer {}", referer);
+              log.info("[fail] redirectUrl {}", redirectUrl);
+
+              response.sendRedirect(redirectUrl);
+            })
         )
         .logout(logout -> logout
             .logoutUrl("/auth/logout")
