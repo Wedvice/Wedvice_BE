@@ -1,24 +1,19 @@
 package com.wedvice.user.entity;
 
+import com.wedvice.common.BaseTimeEntity;
 import com.wedvice.couple.entity.Couple;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import lombok.AllArgsConstructor;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class User {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class User extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,7 +31,7 @@ public class User {
 
     private String profileImageUrl;
 
-    @Column(nullable = true)  // ✅ 메모 필드 (nullable)
+    @Column(nullable = true)
     private String memo;
 
     @Column(nullable = true)
@@ -45,15 +40,9 @@ public class User {
     @Email
     private String email;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = true)
     private Role role;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "couple_id", nullable = true)
@@ -62,25 +51,62 @@ public class User {
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
     private UserConfig userConfig;
 
-    public void updateRefreshToken(String newRefreshToken) {
-        this.refreshToken = newRefreshToken;
+
+
+    /**
+     * 메서드 시작
+     */
+
+
+
+    // private 생성자 (빌더 패턴용)
+    @Builder
+    private User(String oauthId, String provider, String nickname, String profileImageUrl, String memo, String refreshToken, String email, Role role) {
+        this.oauthId = oauthId;
+        this.provider = provider;
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
+        this.memo = memo;
+        this.refreshToken = refreshToken;
+        this.email = email;
+        this.role = role;
     }
 
+
+    // 정적 팩토리 메서드
+    public static User create(String oauthId, String provider) {
+        return User.builder()
+                .oauthId(oauthId)
+                .provider(provider)
+                .role(Role.USER) // 기본 역할 유저 -> 매칭안된상태
+                .build();
+    }
+
+    // 연관관계 편의 메서드
     public void matchCouple(Couple couple) {
         this.couple = couple;
-
+        couple.getUsers().add(this);
     }
 
-    public void changeNickname(String nickname) {
+    // 업데이트 메서드
+    public void updateNickname(String nickname) {
         this.nickname = nickname;
     }
 
-    public void changeRole(User.Role role) {
-        this.role = role;
+    public void updateProfileImage(String profileImageUrl){
+        this.profileImageUrl = profileImageUrl;
     }
 
     public void updateMemo(String memo) {
         this.memo = memo;
+    }
+
+    public void updateRefreshToken(String newRefreshToken) {
+        this.refreshToken = newRefreshToken;
+    }
+
+    public void updateRole(User.Role role) {
+        this.role = role;
     }
 
     @Getter
