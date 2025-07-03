@@ -5,8 +5,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,7 +19,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       "/",
       "/auth/refresh",
 //            "/auth/status",
-      "/custom/redirect-to-oauth",
+      "/test-auth/token/-1",
+      "/test-auth/token/-2",
       "/login/oauth2/code/kakao",
       "/oauth2/authorization/kakao",
       "/swagger-ui/index.html",
@@ -31,8 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       "/swagger-ui/index.css",
       "/swagger-ui/swagger-ui.css",
       "/v3/api-docs/swagger-config",
-      "/v3/api-docs",
-      "/favicon.ico"
+      "/v3/api-docs"
 
       // 추가로 공개 API 있으면 여기에 등록
   );
