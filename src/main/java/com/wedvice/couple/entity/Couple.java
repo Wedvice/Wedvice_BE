@@ -1,6 +1,7 @@
 package com.wedvice.couple.entity;
 
 import com.wedvice.common.BaseTimeEntity;
+import com.wedvice.couple.exception.SamePersonMatchException;
 import com.wedvice.coupletask.entity.CoupleTask;
 import com.wedvice.task.entity.Task;
 import com.wedvice.user.entity.User;
@@ -42,6 +43,23 @@ public class Couple extends BaseTimeEntity {
      * 메서드 시작
      */
 
+
+// Couple.java
+//    public void addUser(User user) {
+//        this.users.add(user);
+//        user.matchCouple(this);
+//    }
+//
+//    public static Couple createWithUsers(User user1, User user2) {
+//        if (user1.equals(user2)) {
+//            throw new SamePersonMatchException();
+//        }
+//
+//        Couple couple = Couple.builder().build();
+//        couple.addUser(user1);
+//        couple.addUser(user2);
+//        return couple;
+//    }
 
 
     // protected 생성자 (빌더 패턴용)

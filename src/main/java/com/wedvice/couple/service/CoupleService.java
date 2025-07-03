@@ -50,6 +50,7 @@ public class CoupleService {
             if (user.equals(partnerUser)) {
                 throw new SamePersonMatchException();
             }
+//            커플중심으로 유저의 연관관계 맺는것도 괜찮은거같음.
             user.matchCouple(couple);
             partnerUser.matchCouple(couple);
 

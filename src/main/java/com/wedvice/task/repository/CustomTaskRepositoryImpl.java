@@ -3,25 +3,22 @@ package com.wedvice.task.repository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.wedvice.couple.entity.QCouple;
-import com.wedvice.coupletask.entity.QCoupleTask;
-import com.wedvice.subtask.entity.QSubTask;
 import com.wedvice.task.dto.TaskResponseDTO;
-import com.wedvice.task.entity.QTask;
-import com.wedvice.user.entity.QUser;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-import static com.wedvice.coupletask.entity.QCoupleTask.*;
+import static com.wedvice.coupletask.entity.QCoupleTask.coupleTask;
 import static com.wedvice.subtask.entity.QSubTask.subTask;
-import static com.wedvice.task.entity.QTask.*;
-import static com.wedvice.user.entity.QUser.*;
+import static com.wedvice.task.entity.QTask.task;
+import static com.wedvice.user.entity.QUser.user;
 
 @RequiredArgsConstructor
 public class CustomTaskRepositoryImpl implements CustomTaskRepository{
 
     private final JPAQueryFactory queryFactory;
+
+
 
 
 
@@ -41,6 +38,7 @@ public class CustomTaskRepositoryImpl implements CustomTaskRepository{
                 .select(Projections.constructor(
                         TaskResponseDTO.class,
                         task.id,
+//                        커플태스크로 고치기.
                         task.title,
                         subTask.count(),                                       // 전체 서브태스크 수
 //                        subTask.count().filter(subTask.completed.isTrue())     // 완료된 수

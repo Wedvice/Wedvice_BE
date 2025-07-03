@@ -60,7 +60,7 @@ public class User extends BaseTimeEntity {
 
 
     // private 생성자 (빌더 패턴용)
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     private User(String oauthId, String provider, String nickname, String profileImageUrl, String memo, String refreshToken, String email, Role role) {
         this.oauthId = oauthId;
         this.provider = provider;

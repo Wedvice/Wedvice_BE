@@ -102,7 +102,6 @@ public class SubTask extends BaseEntity{
         this.coupleTask = coupleTask;
     }
 
-    // 비즈니스 로직
     public void updateCompleteStatus() {
         this.completed = !this.completed;
     }

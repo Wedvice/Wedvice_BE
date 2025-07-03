@@ -35,34 +35,38 @@ public class SubTaskCustomRepositoryImpl implements SubTaskCustomRepository {
         .where(user.id.eq(userId))
         .fetchOne();
 
-    if (coupleId == null) {
-      return List.of();
-    }
+//        리포지토리는 db관련 작업만 이 작업은 서비스로 넘기기.
+        if (coupleId == null) return List.of();
 
-    // DTO로 뽑기
-    return queryFactory
-        .select(Projections.constructor(
-            SubTaskResponseDTO.class,
-            subTask.id,
-            subTask.displayName,
-            subTask.completed,
-            subTask.role.stringValue(),
-            subTask.price,
-            subTask.targetDate,
-            subTask.contents,
-            subTask.orders
-        ))
-        .from(subTask)
-        .join(subTask.coupleTask, coupleTask)
-        .join(coupleTask.task, task)
-        .where(
-            coupleTask.couple.id.eq(coupleId),
-            coupleTask.task.id.eq(taskId),
-            coupleTask.deleted.eq(false)
-        )
-        .orderBy(subTask.orders.asc())
-        .fetch();
-  }
+        // DTO로 뽑기
+//        db -> db에서 컬럼 몇개 더 조회해온다고 성능저하가 발생하진 않고
+//        join문이나 where절 인덱스 걸러내는거
+//        엔티티를 조회해와서 그 연관관계를 쓰다보니 lazy-loadingㅇㅣ 발생하고 fetchjoin으로
+//        해결하는데 이거에 대한 또 문제가 있고. 이거를 또 해결하기 위한 .....
+//        저는 mybatis도 분석 List<Order> Lazy-loading , eager(X), fetchjoin
+        return queryFactory
+                .select(Projections.constructor(
+                        SubTaskResponseDTO.class,
+                        subTask.id,
+                        subTask.displayName,
+                        subTask.completed,
+                        subTask.role.stringValue(),
+                        subTask.price,
+                        subTask.targetDate,
+                        subTask.content,
+                        subTask.orders
+                ))
+                .from(subTask)
+                .join(subTask.coupleTask, coupleTask)
+                .join(coupleTask.task, task)
+                .where(
+                        coupleTask.couple.id.eq(coupleId),
+                        coupleTask.task.id.eq(taskId),
+                        coupleTask.deleted.eq(false)
+                )
+                .orderBy(subTask.orders.asc())
+                .fetch();
+    }
 
   @Override
   public Slice<SubTaskHomeResponseDto> findHomeSubTasksByCondition(Long userId,
@@ -103,7 +107,7 @@ public class SubTaskCustomRepositoryImpl implements SubTaskCustomRepository {
             .subTaskContent(st.getContent())
             .taskContent(st.getCoupleTask().getTask().getTitle())
             .targetDate(st.getTargetDate())
-            .completed(st.isCompleted())
+            .completed(st.getCompleted())
             .orders(st.getOrders())
             .build())
         .collect(Collectors.toList());

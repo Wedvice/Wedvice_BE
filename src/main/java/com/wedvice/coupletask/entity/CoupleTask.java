@@ -76,18 +76,4 @@ public class CoupleTask extends BaseEntity {
         defaultSubTasks.forEach(this::addSubTask);
     }
 
-    // 조회 메서드
-    public double getCompletionRate() {
-        if (subTasks.isEmpty()) return 0.0;
-        return (double) getCompletedSubTaskCount() / subTasks.size();
-    }
-
-    public int getTotalSubTaskCount() {
-        return subTasks.size();
-    }
-
-    public long getCompletedSubTaskCount() {
-        return subTasks.stream().filter(SubTask::getCompleted).count();
-    }
-
 }
