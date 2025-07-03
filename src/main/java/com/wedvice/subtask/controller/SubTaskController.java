@@ -4,6 +4,7 @@ import com.wedvice.common.ApiResponse;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
 import com.wedvice.subtask.dto.CompleteRateResponseDto;
+import com.wedvice.subtask.dto.CreateSubTaskRequestDTO;
 import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
 import com.wedvice.subtask.service.SubTaskService;
@@ -42,14 +43,26 @@ public class SubTaskController {
 
 
     @PostMapping()
-    public String post() {
-        return "create subtask";
+    public String post(@RequestBody CreateSubTaskRequestDTO createSubTaskRequestDTO) {
+
+        log.info("========== "+createSubTaskRequestDTO);
+
+
+        return "create subtask success";
     }
 
     @DeleteMapping()
-    public String delete() {
+    public String delete(@RequestBody Long subTaskId) {
         return "delete subtask";
     }
+
+    @PatchMapping
+    public String subTaskCompleted(){
+
+        return "subtask status change completed";
+
+    }
+
 
     @GetMapping("/home")
     @Operation(summary = "서브태스크 홈 목록 조회", description = "완료 여부 및 top3 여부에 따라 목록을 조회합니다. 무한스크롤 지원")

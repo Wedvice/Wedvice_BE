@@ -14,9 +14,13 @@ public class JpaAuditingConfiguration {
 
     @Bean
     public AuditorAware<String> auditorProvider() {
-        return () -> Optional.of(
+        return () -> Optional.ofNullable(
 //                "hyunggeun"
-                SecurityContextHolder.getContext().getAuthentication().getName()
+//                서브태스크 작성할 때 작동하는지 확인
+                Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                        .filter(authentication -> authentication.isAuthenticated())
+                        .map(org.springframework.security.core.Authentication::getName)
+                        .orElse(null)
 
         );
     }

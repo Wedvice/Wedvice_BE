@@ -25,35 +25,6 @@ public class SubTaskService {
 
     private final SubTaskRepository subTaskRepository;
 
-    public void createDefaultSubTasksFor(CoupleTask coupleTask) {
-        Task task = coupleTask.getTask();
-
-        // SubTask 템플릿을 불러오거나 직접 정의
-        List<SubTask> subTasks = List.of(
-                SubTask.builder()
-                        .coupleTask(coupleTask)
-                        .orders(0)
-                        .displayName("기본 서브태스크 1")
-                        .role(User.Role.GROOM)
-                        .price(0)
-                        .contents("설명1")
-                        .targetDate(LocalDate.now().plusDays(3))
-                        .completed(false)
-                        .build(),
-                SubTask.builder()
-                        .coupleTask(coupleTask)
-                        .orders(1)
-                        .displayName("기본 서브태스크 2")
-                        .role(User.Role.BRIDE)
-                        .price(100000)
-                        .contents("설명2")
-                        .targetDate(LocalDate.now().plusDays(5))
-                        .completed(false)
-                        .build()
-        );
-
-        subTaskRepository.saveAll(subTasks);
-    }
 
     public List<SubTaskResponseDTO> getAllSubTask(Long userId, Long taskId) {
 
