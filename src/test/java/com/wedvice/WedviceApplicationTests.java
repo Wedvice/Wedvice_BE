@@ -33,16 +33,9 @@ public class WedviceApplicationTests {
     @Test
     public void testMember() throws Exception{
 
-        User kakaoUser = User.builder()
-                .oauthId("12412231")
-                .provider("kakao")
-                .build();
+        User kakaoUser = User.create("12412231","kakao");
+        User anotherUser = User.create("1234444","naver");
 
-
-        User anotherUser = User.builder()
-                .oauthId("1234444")
-                .provider("naver")
-                .build();
 
         //when
         userRepository.save(kakaoUser);

@@ -5,11 +5,8 @@ import com.wedvice.security.login.LoginUser;
 import com.wedvice.task.dto.TaskResponseDTO;
 import com.wedvice.task.service.TaskService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -21,6 +18,7 @@ public class TaskController {
 
     private final TaskService taskService;
 
+//    responseEntity로 바꾸기.. 응답포맷
     @GetMapping()
     public List<TaskResponseDTO> getAllTaskAndSubTask(@LoginUser CustomUserDetails loginUser){
 
@@ -28,7 +26,10 @@ public class TaskController {
     }
 
     @DeleteMapping()
-    public boolean deleteTask(){
+    public boolean deleteTask(@LoginUser CustomUserDetails loginUser, @RequestBody Long taskId){
+
+        taskService.delete(taskId,loginUser);
+
 
         return true;
     }

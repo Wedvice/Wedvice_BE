@@ -28,6 +28,7 @@ public class MatchCodeGenerator {
                 return code;
             }
         }
+//        커스텀 exception으로 수정
         throw new RuntimeException("고유한 매칭 코드를 생성할 수 없습니다.");
     }
 
@@ -38,8 +39,4 @@ public class MatchCodeGenerator {
         return adjective + noun + number;
     }
 
-    public boolean isValidFormat(String code) {
-        return code.matches("^[가-힣]{2,4}[가-힣]{2,4}\\d{3}$");
-        // 예: 귀여운토끼123, 멋진펭귄456 등
-    }
 }

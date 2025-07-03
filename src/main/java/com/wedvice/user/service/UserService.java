@@ -38,11 +38,8 @@ public class UserService {
     public User saveOrGetUser(String oauthId, String provider, String profileImageUrl) {
         return userRepository.findByOauthId(oauthId)
                 .orElseGet(() -> {
-                    User newUser = User.builder()
-                            .oauthId(oauthId)
-                            .provider(provider)
-                            .profileImageUrl(profileImageUrl)
-                            .build();
+                    User newUser = User.create(oauthId, provider);
+                    newUser.updateProfileImage(profileImageUrl);
                     return userRepository.save(newUser);
                 });
     }

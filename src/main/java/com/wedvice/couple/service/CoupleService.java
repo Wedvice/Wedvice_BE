@@ -1,6 +1,5 @@
 package com.wedvice.couple.service;
 
-import com.wedvice.common.exception.CustomException;
 import com.wedvice.couple.dto.CompleteMatchRequestDto;
 import com.wedvice.couple.dto.CoupleHomeInfoResponseDto;
 import com.wedvice.couple.dto.Gender;
@@ -9,11 +8,11 @@ import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.*;
 import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.couple.util.MatchCodeService;
-import com.wedvice.coupletask.service.CoupleTaskService;
+import com.wedvice.task.service.TaskService;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.apache.coyote.BadRequestException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,38 +21,44 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CoupleService {
 
     private final CoupleRepository coupleRepository;
     private final MatchCodeService matchCodeService;
     private final UserRepository userRepository;
-    private final CoupleTaskService coupleTaskService;
+    private final TaskService taskService;
 
 
     @Transactional
     public void matchCouple(long userId, String matchCode) {
-        Optional<Long> partnerId = matchCodeService.getCodeUserId(matchCode);
-        long pid = partnerId.orElseThrow(() -> new MatchCodeExpiredException(matchCode));
+        long pid = matchCodeService
+                    .getCodeUserId(matchCode)
+                    .orElseThrow(() -> new MatchCodeExpiredException(matchCode));
+
 
         User user = userRepository.findById(userId)
                 .orElseThrow(InvalidUserAccessException::new);
         User partnerUser = userRepository.findById(pid)
                 .orElseThrow(UserNotFoundException::new);
 
-        if (userId == partnerUser.getId()) throw new SamePersonMatchException();
 
-        Couple couple = coupleRepository.save(Couple.builder().build());
+        Couple couple = coupleRepository.save(Couple.create());
 
-        user.matchCouple(couple);
-        partnerUser.matchCouple(couple);
 
-//     커플 생성될 때 기본 task ,subtask 매핑
 
-        if (!coupleTaskService.isCoupleHavingTasks(couple)) {
+            if (user.equals(partnerUser)) {
+                throw new SamePersonMatchException();
+            }
+//            커플중심으로 유저의 연관관계 맺는것도 괜찮은거같음.
+            user.matchCouple(couple);
+            partnerUser.matchCouple(couple);
 
-            coupleTaskService.createCoupleWithTasks(couple);
-        }
 
+        //커플 생성될 때 기본 task ,subtask 매핑
+        //Cascade로 Task/SubTask도 함께 저장
+
+        couple.initializeTasks(taskService.findAllTask());
 
         // 모든 로직이 정상적으로 완료된 후 코드 소모
         matchCodeService.removeCode(matchCode);
@@ -82,22 +87,20 @@ public class CoupleService {
 
 
 
-        user.changeNickname(requestDto.getNickName());
-        user.changeRole(role);
+        user.updateNickname(requestDto.getNickName());
+        user.updateRole(role);
 
 
     }
 
-    //    코드 입력(couple외래키가 있냐 없냐) -> 닉네임(nickname) -> 성별(role) ->
-    //    입력 다 하면 상대방 입력 대기 뻉글뻉글 -> 홈 화면에 언제 보내줄꺼냐?
-    //    (user.couple.users(!=id).getnickname,role !=null
+
     public CoupleHomeInfoResponseDto getCoupleInfo(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(InvalidUserAccessException::new);
 
         Couple couple = user.getCouple();
         if (couple == null) {
-            throw new RuntimeException("아직 커플이 성립되지 않았습니다."); // 매치코드 입력 단계
+            throw new PartnerMustEnterMatchCode(); // 매치코드 입력 단계
         }
 
         if (user.getNickname() == null || user.getRole() == null) {
