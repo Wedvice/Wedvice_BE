@@ -47,8 +47,6 @@ public class CoupleController {
             summary = "커플 매칭 마지막 단계",
             description = "커플의 닉네임과 성별을 저장합니다."
     )
-
-//    화면을 닉네임,성별 따로 할건지 아니면 합쳐서 보내줄건지 얘기 필요.
     public ResponseEntity<ApiResponse<?>> completeMatch(@Valid @RequestBody CompleteMatchRequestDto requestDto, @LoginUser CustomUserDetails loginUser) {
         coupleService.completeMatch(loginUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.success(null));

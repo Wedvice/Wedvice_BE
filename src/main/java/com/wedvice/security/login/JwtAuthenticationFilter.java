@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String requestURI = request.getRequestURI();
 
-//        이상한 포인트 -> isWhiteList면 토큰을 검증하지 않아서 토큰이 필요한곳에서 못 가져다 쓴다.
+
         if (!isWhiteListed(requestURI)) {
 
             String token = tokenProvider.resolveToken(request);
