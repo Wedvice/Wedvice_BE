@@ -4,7 +4,6 @@ import com.wedvice.common.BaseTimeEntity;
 import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.NotMatchedYetException;
 import com.wedvice.couple.exception.PartnerNotFoundException;
-import com.wedvice.security.login.RedirectEnum;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,7 +17,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
-import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -122,14 +120,24 @@ public class User extends BaseTimeEntity {
         this.role = role;
     }
 
-    // 로직 메서드
-    private boolean isInfoIncompleted() {
-        return this.nickname == null || this.role == null;
+
+    // 도메인 내부: 상태 판단만 담당
+    public boolean isMatched() {
+        return this.couple != null;
     }
 
-    /**
-     * couple이 없으면 null 커플이 있는데 유저가 없으면 에러상황
-     */
+    public boolean isInfoCompleted() {
+        return this.nickname != null && this.role != null;
+    }
+
+    public boolean isPartnerInfoCompleted() {
+        try {
+            return getPartnerOrThrow().isInfoCompleted();
+        } catch (PartnerNotFoundException e) {
+            return false; // 파트너가 없으면 info도 당연히 불완전
+        }
+    }
+
     public User getPartnerOrThrow() {
         if (this.couple == null) {
             throw new NotMatchedYetException();
@@ -139,35 +147,6 @@ public class User extends BaseTimeEntity {
             .filter(u -> !u.getId().equals(this.id))
             .findFirst()
             .orElseThrow(PartnerNotFoundException::new);
-    }
-
-    // 2. 매칭 여부에 따라 흐름 분기 가능
-    public Optional<User> findPartner() {
-        if (this.couple == null) {
-            return Optional.empty();
-        }
-
-        return Optional.of(
-            this.couple.getUsers().stream()
-                .filter(u -> !u.getId().equals(this.id))
-                .findFirst()
-                .orElseThrow(PartnerNotFoundException::new));
-    }
-
-    public RedirectEnum getMatchingStatus() {
-        if (this.couple == null) {
-            return RedirectEnum.JUST_USER;
-        }
-        if (this.isInfoIncompleted()) {
-            return RedirectEnum.NOT_COMPLETED;
-        }
-
-        Optional<User> partner = findPartner();
-        if (partner.map(User::isInfoIncompleted).orElse(true)) {
-            return RedirectEnum.ONLY_COMPLETED;
-        }
-
-        return RedirectEnum.PAIR_COMPLETED;
     }
 
     @Getter

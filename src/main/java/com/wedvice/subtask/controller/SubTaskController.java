@@ -100,11 +100,20 @@ public class SubTaskController {
     return ResponseEntity.ok(ApiResponse.success(responseDto));
   }
 
-  @GetMapping("/progress")
-  @Operation(summary = "완료율 조회", description = "커플의 전체 SubTask 완료율을 조회합니다.")
-  public ResponseEntity<ApiResponse<CompleteRateResponseDto>> getProgress(
-      @LoginUser CustomUserDetails loginUser) {
-    CompleteRateResponseDto responseDto = subTaskService.getProgressRate(loginUser.getUserId());
-    return ResponseEntity.ok(ApiResponse.success(responseDto));
-  }
+    @GetMapping("/progress")
+    @Operation(summary = "완료율 조회", description = "커플의 전체 SubTask 완료율을 조회합니다.")
+    public ResponseEntity<ApiResponse<CompleteRateResponseDto>> getProgress(
+        @LoginUser CustomUserDetails loginUser,
+
+        @Parameter(
+            name = "role",
+            description = "조회할 역할 (GROOM: 신랑, BRIDE: 신부, TOGETHER: 함께). 미지정 시 전체 기준으로 계산됩니다.",
+            required = false,
+            example = "GROOM"
+        )
+        @RequestParam(name = "role", required = false) String role) {
+        CompleteRateResponseDto responseDto = subTaskService.getProgressRate(loginUser.getUserId(),
+            role);
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
+    }
 }

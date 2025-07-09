@@ -39,4 +39,13 @@ public class UserCustomRepositoryImpl implements UserCustomRepository {
             .where(user.id.eq(userId))
             .fetchOne());
     }
+
+    @Override
+    public Long findCoupleIdByUserId(Long userId) {
+        return queryFactory
+            .select(user.couple.id)
+            .from(user)
+            .where(user.id.eq(userId))
+            .fetchOne();
+    }
 }

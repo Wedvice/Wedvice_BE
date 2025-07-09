@@ -3,6 +3,7 @@ package com.wedvice.user.service;
 import com.wedvice.couple.exception.InvalidUserAccessException;
 import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.security.login.JwtTokenProvider;
+import com.wedvice.security.login.RedirectEnum;
 import com.wedvice.security.login.RedirectResponseDto;
 import com.wedvice.user.dto.MemoRequestDto;
 import com.wedvice.user.dto.UserDto;
@@ -138,7 +139,23 @@ public class UserService {
         User user = userRepository.findByUserWithCoupleAndPartner(userId)
             .orElseThrow(InvalidUserAccessException::new);
 
-        return RedirectResponseDto.from(user.getMatchingStatus());
+        return RedirectResponseDto.from(determineMatchingFlow(user));
+    }
+
+    public RedirectEnum determineMatchingFlow(User user) {
+        if (!user.isMatched()) {
+            return RedirectEnum.JUST_USER;
+        }
+
+        if (!user.isInfoCompleted()) {
+            return RedirectEnum.NOT_COMPLETED;
+        }
+
+        if (!user.isPartnerInfoCompleted()) {
+            return RedirectEnum.ONLY_COMPLETED;
+        }
+
+        return RedirectEnum.PAIR_COMPLETED;
     }
 
     @Transactional

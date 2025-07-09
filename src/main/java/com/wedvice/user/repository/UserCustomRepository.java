@@ -10,4 +10,6 @@ public interface UserCustomRepository {
     List<UserDto> getAllUserTestExample();
 
     Optional<User> findByUserWithCoupleAndPartner(Long userId);
+
+    Long findCoupleIdByUserId(Long userId);
 }
