@@ -1,6 +1,7 @@
 package com.wedvice.subtask.controller;
 
 import com.wedvice.common.ApiResponse;
+import com.wedvice.coupletask.service.CoupleTaskService;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
 import com.wedvice.subtask.dto.CompleteRateResponseDto;
@@ -36,12 +37,20 @@ import org.springframework.web.bind.annotation.RestController;
 public class SubTaskController {
 
   private final SubTaskService subTaskService;
+  private final CoupleTaskService coupleTaskService;
 
   @GetMapping
   public List<SubTaskResponseDTO> get(@LoginUser CustomUserDetails loginUser, long taskId) {
 
     return subTaskService.getAllSubTask(loginUser.getUserId(), taskId);
 
+  }
+
+  @GetMapping("/price")
+  public void getAllCoupleTaskPrice(@LoginUser CustomUserDetails loginUser) {
+
+//    회원의 모든 coupletask의 subtask를 조회하여 금액을 계산한다. (전체 금액 확인)
+    coupleTaskService.getCoupleTasksWithSubTaskInfo(loginUser.getUserId());
   }
 
   @PatchMapping("/align")

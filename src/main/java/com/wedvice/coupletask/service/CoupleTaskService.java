@@ -1,8 +1,10 @@
 package com.wedvice.coupletask.service;
 
 import com.wedvice.couple.entity.Couple;
+import com.wedvice.coupletask.dto.CoupleTaskWithSubTaskInfo;
 import com.wedvice.coupletask.entity.CoupleTask;
 import com.wedvice.coupletask.repository.CoupleTaskRepository;
+import com.wedvice.subtask.entity.SubTask;
 import com.wedvice.subtask.service.SubTaskService;
 import com.wedvice.task.entity.Task;
 import com.wedvice.task.service.TaskService;
@@ -25,5 +27,17 @@ public class CoupleTaskService {
 
     public boolean isCoupleHavingTasks(Couple couple) {
         return coupleTaskRepository.findByCouple(couple);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CoupleTaskWithSubTaskInfo> getCoupleTasksWithSubTaskInfo(Long coupleId) {
+        List<SubTask> subTasks = coupleTaskRepository.findSubTasksForCoupleTaskInfo(coupleId);
+        return subTasks.stream()
+                .map(subTask -> new CoupleTaskWithSubTaskInfo(
+                        subTask.getCoupleTask().getId(),
+                        subTask.getCoupleTask().getTask().getTitle(),
+                        subTask.getPrice()
+                ))
+                .collect(Collectors.toList());
     }
 }

@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface CoupleTaskRepository extends JpaRepository<CoupleTask, Long> {
+public interface CoupleTaskRepository extends JpaRepository<CoupleTask, Long> , CoupleTaskCustomRepository {
 
     boolean findByCouple(Couple couple);
 
