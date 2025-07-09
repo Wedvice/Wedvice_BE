@@ -90,7 +90,7 @@ public class SubTask extends BaseEntity{
 
         // 예시 기본 서브태스크 생성
         defaults.add(SubTask.create(coupleTask,"첫 데이트 준비", 0,LocalDate.now(), User.Role.GROOM, 100000, "맛집 탐방하기"));
-        defaults.add(SubTask.create(coupleTask,"긴며일 선물 준비", 1,LocalDate.now(), User.Role.TOGETHER, 200000, "서로를 위한 선물 고르기"));
+        defaults.add(SubTask.create(coupleTask,"기념일 선물 준비", 1,LocalDate.now(), User.Role.TOGETHER, 200000, "서로를 위한 선물 고르기"));
         defaults.add(SubTask.create(coupleTask,"여행 계획 세우기", 2,LocalDate.now(), User.Role.TOGETHER, 300000, "함께 갈 여행지 정하기"));
         defaults.add(SubTask.create(coupleTask,"공동 계좌 만들기", 3,LocalDate.now(), User.Role.BRIDE, 400000, "재정 계획 세우기"));
         defaults.add(SubTask.create(coupleTask,"집 꾸미기", 4,LocalDate.now(), User.Role.TOGETHER, 500000, "인테리어 아이디어 모으기"));
