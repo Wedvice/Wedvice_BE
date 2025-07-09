@@ -19,6 +19,6 @@ public interface CoupleTaskRepository extends JpaRepository<CoupleTask, Long> {
     public List<CoupleTask> findByCoupleIdWithTask(@Param("coupleId") Long coupleId);
 
 
-    public Optional<CoupleTask> findByIdAndCoupleId(Long taskId,Long  coupleId);
+    public Optional<CoupleTask> findByTaskIdAndCoupleId(Long taskId,Long  coupleId);
 
 }

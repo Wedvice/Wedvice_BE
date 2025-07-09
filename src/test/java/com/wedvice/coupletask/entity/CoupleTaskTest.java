@@ -12,6 +12,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 class CoupleTaskTest {
 
@@ -86,5 +89,20 @@ class CoupleTaskTest {
         // Then
         assertThat(coupleTask.getSubTasks()).hasSize(1);
         assertThat(coupleTask.getSubTasks().get(0)).isEqualTo(newSubTask);
+    }
+
+    @Test
+    @DisplayName("CoupleTask의 updateDeleteStatus가 호출되면 deleted 상태가 변경되어야 한다")
+    void coupleTaskUpdateDeleteStatusShouldChangeDeletedState() {
+        // Given
+        // CoupleTask.create() 정적 팩토리 메서드를 사용하여 인스턴스 생성
+        CoupleTask coupleTask = CoupleTask.create(mock(com.wedvice.task.entity.Task.class), mock(Couple.class));
+        assertFalse(coupleTask.isDeleted()); // 초기 상태는 false
+
+        // When
+        coupleTask.updateDeleteStatus();
+
+        // Then
+        assertTrue(coupleTask.isDeleted()); // 상태가 true로 변경되어야 함
     }
 }
