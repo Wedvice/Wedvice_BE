@@ -5,19 +5,27 @@ import com.wedvice.couple.dto.CoupleHomeInfoResponseDto;
 import com.wedvice.couple.dto.Gender;
 import com.wedvice.couple.dto.UserDto;
 import com.wedvice.couple.entity.Couple;
-import com.wedvice.couple.exception.*;
+import com.wedvice.couple.exception.AlreadyMatchedException;
+import com.wedvice.couple.exception.InvalidUserAccessException;
+import com.wedvice.couple.exception.MatchCodeExpiredException;
+import com.wedvice.couple.exception.NoTowPeopleException;
+import com.wedvice.couple.exception.NotMatchedYetException;
+import com.wedvice.couple.exception.PartnerIncompleteException;
+import com.wedvice.couple.exception.PartnerMustEnterMatchCode;
+import com.wedvice.couple.exception.PartnerNotFoundException;
+import com.wedvice.couple.exception.SamePersonMatchException;
+import com.wedvice.couple.exception.SameRoleException;
+import com.wedvice.couple.exception.UserNotFoundException;
 import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.couple.util.MatchCodeService;
 import com.wedvice.task.service.TaskService;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.repository.UserRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,27 +41,22 @@ public class CoupleService {
     @Transactional
     public void matchCouple(long userId, String matchCode) {
         long pid = matchCodeService
-                    .getCodeUserId(matchCode)
-                    .orElseThrow(() -> new MatchCodeExpiredException(matchCode));
-
+            .getCodeUserId(matchCode)
+            .orElseThrow(() -> new MatchCodeExpiredException(matchCode));
 
         User user = userRepository.findById(userId)
-                .orElseThrow(InvalidUserAccessException::new);
+            .orElseThrow(InvalidUserAccessException::new);
         User partnerUser = userRepository.findById(pid)
-                .orElseThrow(UserNotFoundException::new);
-
+            .orElseThrow(UserNotFoundException::new);
 
         Couple couple = coupleRepository.save(Couple.create());
 
-
-
-            if (user.equals(partnerUser)) {
-                throw new SamePersonMatchException();
-            }
+        if (user.equals(partnerUser)) {
+            throw new SamePersonMatchException();
+        }
 //            커플중심으로 유저의 연관관계 맺는것도 괜찮은거같음.
-            user.matchCouple(couple);
-            partnerUser.matchCouple(couple);
-
+        user.matchCouple(couple);
+        partnerUser.matchCouple(couple);
 
         //커플 생성될 때 기본 task ,subtask 매핑
         //Cascade로 Task/SubTask도 함께 저장
@@ -67,36 +70,28 @@ public class CoupleService {
     @Transactional
     public void completeMatch(Long userId, CompleteMatchRequestDto requestDto) {
         Gender gender = requestDto.getGender();
-        User user = userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
-        if (user.getCouple() == null) {
-            throw new NotMatchedYetException();
-        }
+        User user = userRepository.findByUserWithCoupleAndPartner(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+
         if (user.getRole() != null) {
             throw new AlreadyMatchedException();
         }
 
-        Optional<User> first = user.getCouple().getUsers().stream().filter(u -> !u.getId().equals(user.getId())).findFirst();
-
-        User partner = first.orElseThrow();
+        User partner = user.getPartnerOrThrow();
 
         User.Role role = gender.equals(Gender.BRIDE) ? User.Role.BRIDE : User.Role.GROOM;
-
-        if(partner.getRole() .equals(role)) {
+        if (partner.getRole().equals(role)) {
             throw new SameRoleException();
         }
 
-
-
         user.updateNickname(requestDto.getNickName());
         user.updateRole(role);
-
-
     }
 
 
     public CoupleHomeInfoResponseDto getCoupleInfo(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(InvalidUserAccessException::new);
+        User user = userRepository.findByUserWithCoupleAndPartner(userId)
+            .orElseThrow(InvalidUserAccessException::new);
 
         Couple couple = user.getCouple();
         if (couple == null) {
@@ -113,9 +108,9 @@ public class CoupleService {
         }
 
         User partner = users.stream()
-                .filter(u -> !u.getId().equals(userId))
-                .findFirst()
-                .orElseThrow(PartnerNotFoundException::new);
+            .filter(u -> !u.getId().equals(userId))
+            .findFirst()
+            .orElseThrow(PartnerNotFoundException::new);
 
         if (partner.getNickname() == null || partner.getRole() == null) {
             throw new PartnerIncompleteException();
@@ -127,9 +122,9 @@ public class CoupleService {
 
 //        isPartner true -> 상대방 , false -> 자기자신
         return CoupleHomeInfoResponseDto.builder()
-                .groomDto(UserDto.of(groom, userId))
-                .brideDto(UserDto.of(bride, userId))
-                .weddingDate(couple.getWeddingDate())
-                .build();
+            .groomDto(UserDto.of(groom, userId))
+            .brideDto(UserDto.of(bride, userId))
+            .weddingDate(couple.getWeddingDate())
+            .build();
     }
 }

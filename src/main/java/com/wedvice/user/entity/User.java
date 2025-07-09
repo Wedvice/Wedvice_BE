@@ -2,8 +2,23 @@ package com.wedvice.user.entity;
 
 import com.wedvice.common.BaseTimeEntity;
 import com.wedvice.couple.entity.Couple;
-import jakarta.persistence.*;
+import com.wedvice.couple.exception.NotMatchedYetException;
+import com.wedvice.couple.exception.PartnerNotFoundException;
+import com.wedvice.security.login.RedirectEnum;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
+import java.util.Optional;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -52,16 +67,14 @@ public class User extends BaseTimeEntity {
     private UserConfig userConfig;
 
 
-
     /**
      * 메서드 시작
      */
 
-
-
     // private 생성자 (빌더 패턴용)
     @Builder(access = AccessLevel.PRIVATE)
-    private User(String oauthId, String provider, String nickname, String profileImageUrl, String memo, String refreshToken, String email, Role role) {
+    private User(String oauthId, String provider, String nickname, String profileImageUrl,
+        String memo, String refreshToken, String email, Role role) {
         this.oauthId = oauthId;
         this.provider = provider;
         this.nickname = nickname;
@@ -76,10 +89,10 @@ public class User extends BaseTimeEntity {
     // 정적 팩토리 메서드
     public static User create(String oauthId, String provider) {
         return User.builder()
-                .oauthId(oauthId)
-                .provider(provider)
-                .role(Role.USER) // 기본 역할 유저 -> 매칭안된상태
-                .build();
+            .oauthId(oauthId)
+            .provider(provider)
+            .role(Role.USER) // 기본 역할 유저 -> 매칭안된상태
+            .build();
     }
 
     // 연관관계 편의 메서드
@@ -93,7 +106,7 @@ public class User extends BaseTimeEntity {
         this.nickname = nickname;
     }
 
-    public void updateProfileImage(String profileImageUrl){
+    public void updateProfileImage(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
 
@@ -109,8 +122,56 @@ public class User extends BaseTimeEntity {
         this.role = role;
     }
 
+    // 로직 메서드
+    private boolean isInfoIncompleted() {
+        return this.nickname == null || this.role == null;
+    }
+
+    /**
+     * couple이 없으면 null 커플이 있는데 유저가 없으면 에러상황
+     */
+    public User getPartnerOrThrow() {
+        if (this.couple == null) {
+            throw new NotMatchedYetException();
+        }
+
+        return this.couple.getUsers().stream()
+            .filter(u -> !u.getId().equals(this.id))
+            .findFirst()
+            .orElseThrow(PartnerNotFoundException::new);
+    }
+
+    // 2. 매칭 여부에 따라 흐름 분기 가능
+    public Optional<User> findPartner() {
+        if (this.couple == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(
+            this.couple.getUsers().stream()
+                .filter(u -> !u.getId().equals(this.id))
+                .findFirst()
+                .orElseThrow(PartnerNotFoundException::new));
+    }
+
+    public RedirectEnum getMatchingStatus() {
+        if (this.couple == null) {
+            return RedirectEnum.JUST_USER;
+        }
+        if (this.isInfoIncompleted()) {
+            return RedirectEnum.NOT_COMPLETED;
+        }
+
+        Optional<User> partner = findPartner();
+        if (partner.map(User::isInfoIncompleted).orElse(true)) {
+            return RedirectEnum.ONLY_COMPLETED;
+        }
+
+        return RedirectEnum.PAIR_COMPLETED;
+    }
+
     @Getter
-    public static enum Role {
+    public enum Role {
 
         GROOM("신랑"),
         BRIDE("신부"),
