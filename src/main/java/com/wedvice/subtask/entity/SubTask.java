@@ -115,4 +115,8 @@ public class SubTask extends BaseEntity{
         this.deleted = true;
     }
 
+    public void updateOrders(int newOrders) {
+        this.orders = newOrders;
+    }
+
 }

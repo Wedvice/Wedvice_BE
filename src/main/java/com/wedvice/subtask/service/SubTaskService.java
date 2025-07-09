@@ -83,4 +83,43 @@ public class SubTaskService {
 
       subTask.updateDeleteStatus();
   }
+
+  // SubTask 완료 상태 변경
+  public void updateSubTaskCompletedStatus(Long userId, Long subTaskId) {
+      SubTask subTask = subTaskRepository.findById(subTaskId)
+              .orElseThrow(() -> new IllegalArgumentException("SubTask not found with id: " + subTaskId));
+
+      User user = userRepository.findById(userId)
+              .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+      // SubTask의 CoupleTask와 User의 Couple이 동일한지 확인
+      if (!subTask.getCoupleTask().getCouple().getId().equals(user.getCouple().getId())) {
+          throw new AccessDeniedException("You do not have permission to update this SubTask's completed status.");
+      }
+
+      subTask.updateCompleteStatus();
+  }
+
+  // SubTask 정렬 순서 변경
+  @Transactional
+  public void updateSubTaskOrders(Long userId, List<Long> subTaskIds) {
+      User user = userRepository.findById(userId)
+              .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+      Long userCoupleId = user.getCouple().getId();
+
+      for (int i = 0; i < subTaskIds.size(); i++) {
+          Long subTaskId = subTaskIds.get(i);
+          SubTask subTask = subTaskRepository.findById(subTaskId)
+                  .orElseThrow(() -> new IllegalArgumentException("SubTask not found with id: " + subTaskId));
+
+          // 권한 확인: SubTask가 사용자의 커플에 속하는지 확인
+          if (!subTask.getCoupleTask().getCouple().getId().equals(userCoupleId)) {
+              throw new AccessDeniedException("You do not have permission to align this SubTask.");
+          }
+
+          // orders 값 업데이트
+          subTask.updateOrders(i);
+      }
+  }
 }

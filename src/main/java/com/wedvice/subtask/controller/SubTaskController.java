@@ -6,6 +6,7 @@ import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
 import com.wedvice.subtask.dto.CompleteRateResponseDto;
 import com.wedvice.subtask.dto.CreateSubTaskRequestDTO;
+import com.wedvice.subtask.dto.SubTaskAlignRequestDTO;
 import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
 import com.wedvice.subtask.service.SubTaskService;
@@ -55,7 +56,8 @@ public class SubTaskController {
   }
 
   @PatchMapping("/align")
-  public String patchAlign() {
+  public String patchAlign(@LoginUser CustomUserDetails loginUser, @RequestBody SubTaskAlignRequestDTO requestDTO) {
+    subTaskService.updateSubTaskOrders(loginUser.getUserId(), requestDTO.getSubTaskIds());
     return "subtask 정렬 위치 변경";
   }
 
@@ -77,11 +79,10 @@ public class SubTaskController {
         return "delete subtask";
     }
 
-    @PatchMapping
-    public String subTaskCompleted(){
-
+    @PatchMapping("/{subTaskId}/completed")
+    public String subTaskCompleted(@LoginUser CustomUserDetails loginUser, @PathVariable Long subTaskId){
+        subTaskService.updateSubTaskCompletedStatus(loginUser.getUserId(), subTaskId);
         return "subtask status change completed";
-
     }
 
 
