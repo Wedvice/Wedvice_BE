@@ -10,6 +10,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SubTaskResponseDTO {
+    private Long coupleTaskId;
     private Long subTaskId;
     private String displayName;
     private Boolean completed;

@@ -64,10 +64,10 @@ public class SubTaskController {
 
 
     @PostMapping()
-    public String post(@RequestBody CreateSubTaskRequestDTO createSubTaskRequestDTO) {
+    public String post(@LoginUser CustomUserDetails loginUser, @RequestBody CreateSubTaskRequestDTO createSubTaskRequestDTO) {
 
         log.info("========== "+createSubTaskRequestDTO);
-
+        subTaskService.createSubTask(loginUser.getUserId(), createSubTaskRequestDTO);
 
         return "create subtask success";
     }

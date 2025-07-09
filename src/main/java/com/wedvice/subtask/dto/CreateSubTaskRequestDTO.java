@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 public class CreateSubTaskRequestDTO {
 
+    private Long coupleTaskId;
 
     private String title;
 

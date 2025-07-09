@@ -1,7 +1,9 @@
 package com.wedvice.subtask.service;
 
+import com.wedvice.coupletask.entity.CoupleTask;
 import com.wedvice.coupletask.repository.CoupleTaskRepository;
 import com.wedvice.subtask.dto.CompleteRateResponseDto;
+import com.wedvice.subtask.dto.CreateSubTaskRequestDTO;
 import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
 import com.wedvice.subtask.exception.NotExistRoleException;
@@ -39,7 +41,7 @@ public class SubTaskService {
     return subTaskRepository.getSubTasks(userId, taskId, coupleId).stream()
         .map(subTask ->
             new SubTaskResponseDTO(
-        subTask.getId(),subTask.getDisplayName(),subTask.getCompleted(),subTask.getRole().toString(),subTask.getPrice(),subTask.getTargetDate(),subTask.getContent(),subTask.getOrders()))
+        subTask.getCoupleTask().getId(),subTask.getId(),subTask.getDisplayName(),subTask.getCompleted(),subTask.getRole().toString(),subTask.getPrice(),subTask.getTargetDate(),subTask.getContent(),subTask.getOrders()))
         .collect(Collectors.toList());
   }
 
@@ -121,5 +123,32 @@ public class SubTaskService {
           // orders 값 업데이트
           subTask.updateOrders(i);
       }
+  }
+
+  // SubTask 생성
+  public SubTask createSubTask(Long userId, CreateSubTaskRequestDTO requestDTO) {
+      User user = userRepository.findById(userId)
+              .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+      CoupleTask coupleTask = coupleTaskRepository.findById(requestDTO.getCoupleTaskId())
+              .orElseThrow(() -> new IllegalArgumentException("CoupleTask not found with id: " + requestDTO.getCoupleTaskId()));
+
+      // 권한 확인: CoupleTask가 현재 로그인한 사용자의 커플에 속하는지 확인
+      if (!coupleTask.getCouple().getId().equals(user.getCouple().getId())) {
+          throw new AccessDeniedException("You do not have permission to create a SubTask for this CoupleTask.");
+      }
+
+      // SubTask.create 팩토리 메서드를 사용하여 SubTask 엔티티 생성
+      SubTask newSubTask = SubTask.create(
+              coupleTask,
+              requestDTO.getTitle(),
+              0,
+              requestDTO.getLocalDate(),
+              requestDTO.getRole(),
+              0,
+              requestDTO.getDescription()
+      );
+
+      return subTaskRepository.save(newSubTask);
   }
 }

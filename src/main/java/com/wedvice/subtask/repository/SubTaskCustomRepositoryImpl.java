@@ -34,7 +34,7 @@ public class SubTaskCustomRepositoryImpl implements SubTaskCustomRepository {
 
 
                 .from(subTask)
-                .join(subTask.coupleTask, coupleTask)
+                .join(subTask.coupleTask, coupleTask).fetchJoin()
                 .where(
                         coupleTask.couple.id.eq(coupleId),
                         coupleTask.task.id.eq(taskId),
