@@ -15,6 +15,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.wedvice.subtask.entity.SubTask;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 @RequiredArgsConstructor
@@ -64,5 +66,21 @@ public class SubTaskService {
 
   public CompleteRateResponseDto getProgressRate(Long userId) {
     return subTaskRepository.getProgressRate(userId);
+  }
+
+  // SubTask 삭제 (soft delete)
+  public void deleteSubTask(Long userId, Long subTaskId) {
+      SubTask subTask = subTaskRepository.findById(subTaskId)
+              .orElseThrow(() -> new IllegalArgumentException("SubTask not found with id: " + subTaskId));
+
+      User user = userRepository.findById(userId)
+              .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+
+      // SubTask의 CoupleTask와 User의 Couple이 동일한지 확인
+      if (!subTask.getCoupleTask().getCouple().getId().equals(user.getCouple().getId())) {
+          throw new AccessDeniedException("You do not have permission to delete this SubTask.");
+      }
+
+      subTask.updateDeleteStatus();
   }
 }

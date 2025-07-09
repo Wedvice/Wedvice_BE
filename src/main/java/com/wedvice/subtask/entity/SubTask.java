@@ -111,4 +111,8 @@ public class SubTask extends BaseEntity{
         return this.completed;
     }
 
+    public void updateDeleteStatus() {
+        this.deleted = true;
+    }
+
 }
