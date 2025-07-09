@@ -1,16 +1,15 @@
 package com.wedvice.subtask.service;
 
-import com.wedvice.coupletask.entity.CoupleTask;
+import com.wedvice.coupletask.repository.CoupleTaskRepository;
 import com.wedvice.subtask.dto.CompleteRateResponseDto;
 import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
-import com.wedvice.subtask.entity.SubTask;
 import com.wedvice.subtask.exception.NotExistRoleException;
 import com.wedvice.subtask.repository.SubTaskRepository;
-import com.wedvice.task.entity.Task;
 import com.wedvice.user.entity.User;
-import java.time.LocalDate;
+import com.wedvice.user.repository.UserRepository;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -23,11 +22,23 @@ import org.springframework.transaction.annotation.Transactional;
 public class SubTaskService {
 
   private final SubTaskRepository subTaskRepository;
+  private final UserRepository userRepository;
+  private final CoupleTaskRepository coupleTaskRepository;
 
 
   public List<SubTaskResponseDTO> getAllSubTask(Long userId, Long taskId) {
 
-    return subTaskRepository.getSubTasks(userId, taskId);
+    User user = userRepository.findById(userId).orElseThrow();
+
+    Long coupleId = user.getCouple().getId();
+
+    if (coupleId == null) return List.of();
+
+    return subTaskRepository.getSubTasks(userId, taskId, coupleId).stream()
+        .map(subTask ->
+            new SubTaskResponseDTO(
+        subTask.getId(),subTask.getDisplayName(),subTask.getCompleted(),subTask.getRole().toString(),subTask.getPrice(),subTask.getTargetDate(),subTask.getContent(),subTask.getOrders()))
+        .collect(Collectors.toList());
   }
 
 
