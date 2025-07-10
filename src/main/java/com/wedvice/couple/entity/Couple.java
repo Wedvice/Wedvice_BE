@@ -6,6 +6,7 @@ import com.wedvice.coupletask.entity.CoupleTask;
 import com.wedvice.task.entity.Task;
 import com.wedvice.user.entity.User;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -63,7 +64,7 @@ public class Couple extends BaseTimeEntity {
 
 
     // protected 생성자 (빌더 패턴용)
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     protected Couple() {
         this.users = new ArrayList<>();
         this.coupleTasks = new ArrayList<>();

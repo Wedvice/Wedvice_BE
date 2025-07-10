@@ -58,7 +58,7 @@ public class SubTask extends BaseEntity{
 
 
     // private 생성자 (빌더 패턴용)
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     private SubTask(CoupleTask coupleTask, int orders, String displayName, User.Role role, Integer price, LocalDate targetDate, boolean completed, String content, boolean deleted) {
         this.coupleTask = coupleTask;
         this.orders = orders;
