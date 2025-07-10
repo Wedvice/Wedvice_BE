@@ -31,7 +31,6 @@ import java.util.Map;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final CoupleRepository coupleRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
@@ -77,6 +76,9 @@ public class UserService {
 
             return createTokenResult(newAccessToken, newRefreshToken);
         } catch (RuntimeException e) {
+            if (e instanceof TokenMismatchException || e instanceof TokenNotFoundException || e instanceof TokenInvalidException) {
+                throw e;
+            }
             e.printStackTrace();
             throw new UnknownTokenException();
         }
