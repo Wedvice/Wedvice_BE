@@ -41,7 +41,7 @@ public class SubTaskService {
     return subTaskRepository.getSubTasks(userId, taskId, coupleId).stream()
         .map(subTask ->
             new SubTaskResponseDTO(
-        subTask.getCoupleTask().getId(),subTask.getId(),subTask.getDisplayName(),subTask.getCompleted(),subTask.getRole().toString(),subTask.getPrice(),subTask.getTargetDate(),subTask.getContent(),subTask.getOrders()))
+        subTask.getCoupleTask().getId(),subTask.getId(),subTask.getDisplayName(),subTask.getCompleted(),subTask.getRole().toString(),subTask.getPrice(),subTask.getTargetDate(),subTask.getCompletedDate(),subTask.getContent(),subTask.getOrders()))
         .collect(Collectors.toList());
   }
 

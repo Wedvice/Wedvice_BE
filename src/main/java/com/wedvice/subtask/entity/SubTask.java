@@ -43,6 +43,8 @@ public class SubTask extends BaseEntity{
 
     private boolean completed;
 
+    private LocalDate completedDate;
+
     private String content;
 
     private boolean deleted;
@@ -104,6 +106,11 @@ public class SubTask extends BaseEntity{
 
     public void updateCompleteStatus() {
         this.completed = !this.completed;
+        if (this.completed) {
+            this.completedDate = LocalDate.now();
+        } else {
+            this.completedDate = null;
+        }
     }
 
     // 조회 메서드

@@ -17,6 +17,7 @@ public class SubTaskResponseDTO {
     private String role;
     private Integer price;
     private LocalDate targetDate;
+    private LocalDate completedDate;
     private String contents;
     private Integer orders;
 }

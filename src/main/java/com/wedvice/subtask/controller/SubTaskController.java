@@ -13,6 +13,7 @@ import com.wedvice.subtask.service.SubTaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +65,7 @@ public class SubTaskController {
 
 
     @PostMapping()
-    public String post(@LoginUser CustomUserDetails loginUser, @RequestBody CreateSubTaskRequestDTO createSubTaskRequestDTO) {
+    public String post(@LoginUser CustomUserDetails loginUser, @Valid @RequestBody CreateSubTaskRequestDTO createSubTaskRequestDTO) {
 
         log.info("========== "+createSubTaskRequestDTO);
         subTaskService.createSubTask(loginUser.getUserId(), createSubTaskRequestDTO);
