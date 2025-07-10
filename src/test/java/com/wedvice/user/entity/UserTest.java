@@ -1,13 +1,17 @@
 package com.wedvice.user.entity;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.wedvice.couple.entity.Couple;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("User 엔티티 단위 테스트")
 class UserTest {
@@ -28,7 +32,7 @@ class UserTest {
 
             // Then
             assertThat(user).isNotNull();
-            assertThat(user).isNotNull();
+            assertThat(user.getNickname()).isNull();
             assertEquals(oauthId, user.getOauthId());
             assertEquals(provider, user.getProvider());
             assertEquals(User.Role.USER, user.getRole());
@@ -41,17 +45,55 @@ class UserTest {
     class UpdateNicknameMethod {
 
         @Test
-        @DisplayName("닉네임이 올바르게 변경되어야 한다.")
+        @DisplayName("닉네임이 올바르게 변경되어야 한다. (1자 또는 2자)")
         void shouldUpdateNickname() {
             // Given
-            User user = User.create("oauthId1", "provider1");
-            String newNickname = "새로운닉네임";
+            User user1 = User.create("oauthId1", "provider1");
+            String nickname1 = "A"; // 1자 닉네임
+
+            User user2 = User.create("oauthId2", "provider2");
+            String nickname2 = "AB"; // 2자 닉네임
 
             // When
-            user.updateNickname(newNickname);
+            user1.updateNickname(nickname1);
+            user2.updateNickname(nickname2);
 
             // Then
-            assertEquals(newNickname, user.getNickname());
+            assertEquals(nickname1, user1.getNickname());
+            assertEquals(nickname2, user2.getNickname());
+        }
+
+        @Test
+        @DisplayName("닉네임이 2자를 초과하면 IllegalArgumentException이 발생해야 한다.")
+        void shouldThrowExceptionWhenNicknameIsMoreThanTwoCharacters() {
+            // Given
+            User user = User.create("oauthId_long", "provider_long");
+            String longNickname = "ABC"; // 3자 닉네임
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, () -> user.updateNickname(longNickname));
+        }
+
+        @Test
+        @DisplayName("닉네임이 null이면 IllegalArgumentException이 발생해야 한다.")
+        void shouldThrowExceptionWhenNicknameIsNull() {
+            // Given
+            User user = User.create("oauthId_null", "provider_null");
+            String nullNickname = null;
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, () -> user.updateNickname(nullNickname));
+        }
+
+        @Test
+        @DisplayName("닉네임이 공백이면 IllegalArgumentException이 발생해야 한다.")
+        void shouldThrowExceptionWhenNicknameIsBlank() {
+            // Given
+            User user = User.create("oauthId_blank", "provider_blank");
+            String blankNickname = " "; // 공백 닉네임
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, () -> user.updateNickname(blankNickname));
         }
     }
 
@@ -91,6 +133,45 @@ class UserTest {
             // Then
             assertEquals(newMemo, user.getMemo());
         }
+
+        @Test
+        @DisplayName("메모가 18자를 초과하면 IllegalArgumentException이 발생해야 한다.")
+        void shouldThrowExceptionWhenMemoIsMoreThanEighteenCharacters() {
+            // Given
+            User user = User.create("oauthId_long_memo", "provider_long_memo");
+            String longMemo = "이것은18자를초과하는매우긴메모입니다."; // 19자
+
+            // When & Then
+            assertThrows(IllegalArgumentException.class, () -> user.updateMemo(longMemo));
+        }
+
+        @Test
+        @DisplayName("메모가 null이면 null로 설정되어야 한다.")
+        void shouldSetMemoToNullWhenNullIsProvided() {
+            // Given
+            User user = User.create("oauthId_null_memo", "provider_null_memo");
+            user.updateMemo("기존 메모"); // 기존 메모 설정
+
+            // When
+            user.updateMemo(null);
+
+            // Then
+            assertNull(user.getMemo());
+        }
+
+        @Test
+        @DisplayName("메모가 빈 문자열이면 빈 문자열로 설정되어야 한다.")
+        void shouldSetMemoToEmptyWhenEmptyStringIsProvided() {
+            // Given
+            User user = User.create("oauthId_empty_memo", "provider_empty_memo");
+            user.updateMemo("기존 메모"); // 기존 메모 설정
+
+            // When
+            user.updateMemo("");
+
+            // Then
+            assertEquals("", user.getMemo());
+        }
     }
 
     @Nested
@@ -113,6 +194,25 @@ class UserTest {
     }
 
     @Nested
+    @DisplayName("updateEmail 메서드")
+    class UpdateEmailMethod {
+
+        @Test
+        @DisplayName("이메일이 올바르게 변경되어야 한다.")
+        void shouldUpdateEmail() {
+            // Given
+            User user = User.create("oauthId_email", "provider_email");
+            String newEmail = "new.email@example.com";
+
+            // When
+            user.updateEmail(newEmail);
+
+            // Then
+            assertEquals(newEmail, user.getEmail());
+        }
+    }
+
+    @Nested
     @DisplayName("updateRole 메서드")
     class UpdateRoleMethod {
 
@@ -130,10 +230,6 @@ class UserTest {
             assertEquals(newRole, user.getRole());
         }
     }
-
-
-
-
 
     @Nested
     @DisplayName("matchCouple 메서드")

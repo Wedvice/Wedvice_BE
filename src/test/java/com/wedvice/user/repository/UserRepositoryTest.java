@@ -1,6 +1,10 @@
 
 package com.wedvice.user.repository;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.wedvice.common.config.QuerydslConfig;
 import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.user.entity.User;
@@ -8,21 +12,18 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-
-import static org.assertj.core.api.Assertions.assertThat;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-@SpringBootTest
+@DataJpaTest
 @ActiveProfiles("test")
 @Transactional
-@DisplayName("UserRepository , 엔티티 데이터 계층 테스트")
-class UserPersistenceTest {
+@DisplayName("User 엔티티 통합 테스트")
+@Import(QuerydslConfig.class)
+class UserRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
@@ -37,7 +38,7 @@ class UserPersistenceTest {
         // 테스트에 사용할 User 엔티티를 생성합니다.
         // User.create() 팩토리 메서드의 동작은 UserTest(단위 테스트)에서 이미 검증되었습니다.
         User newUser = User.create("test-oauth-12345", "kakao");
-        newUser.updateNickname("테스트유저");
+        newUser.updateNickname("테스"); // 2자 닉네임으로 수정
         newUser.updateProfileImage("http://test.com/image.jpg");
         newUser.updateRole(User.Role.BRIDE);
 
@@ -56,7 +57,7 @@ class UserPersistenceTest {
         assertThat(foundUser.getId()).isEqualTo(savedUser.getId());
         assertThat(foundUser.getOauthId()).isEqualTo("test-oauth-12345");
         assertThat(foundUser.getProvider()).isEqualTo("kakao");
-        assertThat(foundUser.getNickname()).isEqualTo("테스트유저");
+        assertThat(foundUser.getNickname()).isEqualTo("테스");
         assertThat(foundUser.getProfileImageUrl()).isEqualTo("http://test.com/image.jpg");
         assertThat(foundUser.getRole()).isEqualTo(User.Role.BRIDE);
     }
@@ -82,34 +83,26 @@ class UserPersistenceTest {
     }
 
     @Test
-    @DisplayName("Nickname 길이 초과 시 (11자) 닉네임이 잘려서 저장되어야 한다.")
-    void nickname_LengthExceeds_ShouldBeTruncated() {
+    @DisplayName("Nickname 길이 초과 시 DataIntegrityViolationException 발생")
+    void nickname_LengthExceeds_ThrowsException() {
         // Given
-        User newUser = User.create("test-oauth-length-11", "kakao");
-        // 10자를 살짝 초과하는 닉네임 (11자)
-        String longNickname = "열한글자닉네임입니다1"; // 11자
-        newUser.updateNickname(longNickname);
+        User user = User.createForTest("longNicknameOauthId", "kakao", "긴닉네임", null); // 3자 닉네임 (DB 제약조건 위반)
 
-
+        // When & Then
         assertThatThrownBy(() -> {
-            userRepository.saveAndFlush(newUser);
+            userRepository.saveAndFlush(user);
         }).isInstanceOf(DataIntegrityViolationException.class);
-
-
     }
 
     @Test
-    @DisplayName("Nickname 길이 초과 시 (15자) 예외가 발생해야 한다.")
-    void nickname_LengthExceeds_ThrowsException() {
+    @DisplayName("Memo 길이 초과 시 DataIntegrityViolationException 발생")
+    void memo_LengthExceeds_ThrowsException() {
         // Given
-        User newUser = User.create("test-oauth-length-15", "kakao");
-        // 10자를 크게 초과하는 닉네임 (15자)
-        newUser.updateNickname("열다섯자닉네임입니다2345"); // 15자
+        User user = User.createForTest("longMemoOauthId", "kakao", "테스", "이것은18자를초과하는매우긴메모입니다."); // 19자 메모 (DB 제약조건 위반)
 
         // When & Then
-        // 닉네임 길이 제약조건 위반으로 예외가 발생하는지 검증합니다.
         assertThatThrownBy(() -> {
-            userRepository.saveAndFlush(newUser);
+            userRepository.saveAndFlush(user);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 
@@ -123,7 +116,7 @@ class UserPersistenceTest {
 
         // User 엔티티 생성 및 Couple 할당
         User newUser = User.create("test-oauth-couple", "kakao");
-        newUser.updateNickname("커플유저");
+        newUser.updateNickname("커플"); // 2자 닉네임으로 수정
         newUser.matchCouple(savedCouple);
 
         // When
@@ -140,5 +133,65 @@ class UserPersistenceTest {
         // Couple 연관관계가 올바르게 로드되었는지 검증
         assertThat(foundUser.getCouple()).isNotNull();
         assertThat(foundUser.getCouple().getId()).isEqualTo(savedCouple.getId());
+    }
+
+    @Test
+    @DisplayName("findByOauthId: oauthId로 User를 정상적으로 조회해야 한다.")
+    void findByOauthId_UserEntity_Success() {
+        // Given
+        String oauthId = "find-by-oauth-id";
+        User user = User.create(oauthId, "kakao");
+        userRepository.save(user);
+
+        // When
+        Optional<User> foundUser = userRepository.findByOauthId(oauthId);
+
+        // Then
+        assertThat(foundUser).isPresent();
+        assertThat(foundUser.get().getOauthId()).isEqualTo(oauthId);
+    }
+
+    @Test
+    @DisplayName("User 삭제: delete()가 정상 동작해야 한다.")
+    void delete_UserEntity_Success() {
+        // Given
+        User user = User.create("delete-oauth-id", "kakao");
+        User savedUser = userRepository.save(user);
+
+        // When
+        userRepository.delete(savedUser);
+        userRepository.flush(); // 즉시 DB에 반영
+
+        // Then
+        Optional<User> foundUser = userRepository.findById(savedUser.getId());
+        assertThat(foundUser).isNotPresent();
+    }
+
+    @Test
+    @DisplayName("User 업데이트: 필드 변경 후 저장 시 정상적으로 반영되어야 한다.")
+    void updateUserFields_Success() {
+        // Given
+        User user = User.create("update-oauth-id", "google");
+        User savedUser = userRepository.save(user);
+
+        // When
+        savedUser.updateNickname("새닉");
+        savedUser.updateProfileImage("http://new.image.com/new.jpg");
+        savedUser.updateMemo("새로운 메모");
+        savedUser.updateRefreshToken("newRefreshToken");
+        savedUser.updateEmail("new.email@example.com");
+        savedUser.updateRole(User.Role.GROOM);
+
+        userRepository.flush(); // 변경사항 즉시 DB 반영
+
+        // Then
+        User foundUser = userRepository.findById(savedUser.getId()).orElseThrow();
+
+        assertThat(foundUser.getNickname()).isEqualTo("새닉");
+        assertThat(foundUser.getProfileImageUrl()).isEqualTo("http://new.image.com/new.jpg");
+        assertThat(foundUser.getMemo()).isEqualTo("새로운 메모");
+        assertThat(foundUser.getRefreshToken()).isEqualTo("newRefreshToken");
+        assertThat(foundUser.getEmail()).isEqualTo("new.email@example.com");
+        assertThat(foundUser.getRole()).isEqualTo(User.Role.GROOM);
     }
 }
