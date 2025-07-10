@@ -26,12 +26,12 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private String provider;
 
-    @Column(nullable = true, length = 10)
+    @Column(length = 2)
     private String nickname;
 
     private String profileImageUrl;
 
-    @Column(nullable = true)
+    @Column(nullable = true, length = 18)
     private String memo;
 
     @Column(nullable = true)
@@ -82,6 +82,30 @@ public class User extends BaseTimeEntity {
                 .build();
     }
 
+    // 테스트용 정적 팩토리 메서드 (엔티티 내부 유효성 검사 우회)
+    public static User createForTest(String oauthId, String provider, String nickname, String memo) {
+        return User.builder()
+                .oauthId(oauthId)
+                .provider(provider)
+                .nickname(nickname)
+                .memo(memo)
+                .role(Role.USER) // 기본 역할 유저
+                .build();
+    }
+
+    // 테스트용 정적 팩토리 메서드 (ID 포함)
+    public static User createForTestWithId(Long id, String oauthId, String provider, String nickname, String memo) {
+        User user = User.builder()
+                .oauthId(oauthId)
+                .provider(provider)
+                .nickname(nickname)
+                .memo(memo)
+                .role(Role.USER)
+                .build();
+        user.id = id; // ID 직접 설정
+        return user;
+    }
+
     // 연관관계 편의 메서드
     public void matchCouple(Couple couple) {
         this.couple = couple;
@@ -90,6 +114,9 @@ public class User extends BaseTimeEntity {
 
     // 업데이트 메서드
     public void updateNickname(String nickname) {
+        if (nickname == null || nickname.trim().isEmpty() || nickname.length() > 2) {
+            throw new IllegalArgumentException("닉네임은 1자 이상 2자 이하여야 합니다.");
+        }
         this.nickname = nickname;
     }
 
@@ -98,11 +125,18 @@ public class User extends BaseTimeEntity {
     }
 
     public void updateMemo(String memo) {
+        if (memo != null && memo.length() > 18) {
+            throw new IllegalArgumentException("메모는 18자를 초과할 수 없습니다.");
+        }
         this.memo = memo;
     }
 
     public void updateRefreshToken(String newRefreshToken) {
         this.refreshToken = newRefreshToken;
+    }
+
+    public void updateEmail(String email){
+        this.email = email;
     }
 
     public void updateRole(User.Role role) {
