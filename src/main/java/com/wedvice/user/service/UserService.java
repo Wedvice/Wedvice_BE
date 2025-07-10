@@ -43,7 +43,7 @@ public class UserService {
 
 
     @Transactional
-    public Map<String, Object> refresh(Cookie cookie) {
+    public Map<String, Object> updateRefresh(Cookie cookie) {
         if (cookie == null) {
             throw new TokenNotFoundException();
         }
@@ -81,7 +81,7 @@ public class UserService {
         }
     }
 
-    public Map<String, Object> createTokenResult(String accessToken, String refreshToken) {
+    private Map<String, Object> createTokenResult(String accessToken, String refreshToken) {
         Map<String, Object> result = new HashMap<>();
 
         HttpHeaders headers = createTokenHeader(refreshToken);
@@ -92,20 +92,20 @@ public class UserService {
         return result;
     }
 
-    public HttpHeaders createTokenHeader(String refreshToken) {
+    private HttpHeaders createTokenHeader(String refreshToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Set-Cookie",
             createTokenCookie("refreshToken", refreshToken, 60 * 60 * 24 * 7));
         return headers;
     }
 
-    public HttpHeaders deleteTokenHeader() {
+    private HttpHeaders deleteTokenHeader() {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Set-Cookie", createTokenCookie("refreshToken", "", 0));
         return headers;
     }
 
-    public String createTokenCookie(String name, String token, int maxAge) {
+    private String createTokenCookie(String name, String token, int maxAge) {
         ResponseCookie cookie = ResponseCookie.from(name, token)
             .path("/")
             .httpOnly(true)
@@ -142,7 +142,7 @@ public class UserService {
         return RedirectResponseDto.from(determineMatchingFlow(user));
     }
 
-    public RedirectEnum determineMatchingFlow(User user) {
+    private RedirectEnum determineMatchingFlow(User user) {
         if (!user.isMatched()) {
             return RedirectEnum.JUST_USER;
         }
