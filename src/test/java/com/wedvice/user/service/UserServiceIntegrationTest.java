@@ -1,16 +1,15 @@
 package com.wedvice.user.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.wedvice.user.entity.User;
 import com.wedvice.user.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -67,10 +66,10 @@ class UserServiceIntegrationTest {
         long finalUserCount = userRepository.count();
 
         assertThat(resultUser.getId()).isEqualTo(existingUser.getId());
-        assertThat(resultUser.getProfileImageUrl()).isEqualTo(initialProfileImageUrl); // 프로필 이미지가 업데이트되지 않아야 함
+        assertThat(resultUser.getProfileImageUrl()).isEqualTo(
+            initialProfileImageUrl); // 프로필 이미지가 업데이트되지 않아야 함
         assertThat(finalUserCount).isEqualTo(initialUserCount); // 사용자 수가 변하지 않아야 함
     }
 
-
-        // * refresh (UPDATE): 기존 사용자 정보가 수정되는 흐름을 테스트. (추가하면 좋음)
+    // * refresh (UPDATE): 기존 사용자 정보가 수정되는 흐름을 테스트. (추가하면 좋음)
 }

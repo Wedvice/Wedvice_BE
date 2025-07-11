@@ -1,26 +1,5 @@
 package com.wedvice.user.service;
 
-import com.wedvice.security.login.JwtTokenProvider;
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.wedvice.user.entity.User;
-import com.wedvice.user.exception.TokenInvalidException;
-import com.wedvice.user.exception.TokenMismatchException;
-import com.wedvice.user.exception.TokenNotFoundException;
-import com.wedvice.user.exception.UnknownTokenException;
-import com.wedvice.user.repository.UserRepository;
-import jakarta.servlet.http.Cookie;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpHeaders;
-
-import java.util.Map;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,8 +8,26 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.wedvice.security.login.JwtTokenProvider;
+import com.wedvice.user.entity.User;
+import com.wedvice.user.exception.TokenInvalidException;
+import com.wedvice.user.exception.TokenMismatchException;
+import com.wedvice.user.exception.TokenNotFoundException;
+import com.wedvice.user.exception.UnknownTokenException;
+import com.wedvice.user.repository.UserRepository;
+import jakarta.servlet.http.Cookie;
+import java.util.Map;
+import java.util.Optional;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
+
 @ExtendWith(MockitoExtension.class)
-@DisplayName("UserService 단위 테스트")
+@DisplayName("UserService 단위 테스트-HG")
 class UserServiceTest {
 
     @Mock
@@ -109,18 +106,22 @@ class UserServiceTest {
         String newRefreshToken = "newRefreshToken";
 
         Cookie cookie = new Cookie("refreshToken", refreshToken);
-        User user = User.createForTestWithId(userId, oauthId, "kakao", nickname, null); // 테스트용 User 생성
+        User user = User.createForTestWithId(userId, oauthId, "kakao", nickname,
+            null); // 테스트용 User 생성
         user.updateRefreshToken(refreshToken); // User에 리프레시 토큰 설정
 
         // Mocking
         when(jwtTokenProvider.validateToken(refreshToken)).thenReturn(true); // 토큰 유효성 검사 통과
-        when(jwtTokenProvider.getUserId(refreshToken)).thenReturn(String.valueOf(userId)); // userId 반환
+        when(jwtTokenProvider.getUserId(refreshToken)).thenReturn(
+            String.valueOf(userId)); // userId 반환
         when(userRepository.findById(userId)).thenReturn(Optional.of(user)); // User 조회 성공
-        when(jwtTokenProvider.generateAccessToken(String.valueOf(userId), nickname, oauthId)).thenReturn(newAccessToken); // 새 액세스 토큰 생성
-        when(jwtTokenProvider.generateRefreshToken(String.valueOf(userId), nickname, oauthId)).thenReturn(newRefreshToken); // 새 리프레시 토큰 생성
+        when(jwtTokenProvider.generateAccessToken(String.valueOf(userId), nickname,
+            oauthId)).thenReturn(newAccessToken); // 새 액세스 토큰 생성
+        when(jwtTokenProvider.generateRefreshToken(String.valueOf(userId), nickname,
+            oauthId)).thenReturn(newRefreshToken); // 새 리프레시 토큰 생성
 
         // When
-        Map<String, Object> result = userService.refresh(cookie);
+        Map<String, Object> result = userService.updateRefresh(cookie);
 
         // Then
         assertThat(result).isNotNull();
@@ -134,8 +135,10 @@ class UserServiceTest {
         verify(jwtTokenProvider, times(1)).validateToken(refreshToken);
         verify(jwtTokenProvider, times(1)).getUserId(refreshToken);
         verify(userRepository, times(1)).findById(userId);
-        verify(jwtTokenProvider, times(1)).generateAccessToken(String.valueOf(userId), nickname, oauthId);
-        verify(jwtTokenProvider, times(1)).generateRefreshToken(String.valueOf(userId), nickname, oauthId);
+        verify(jwtTokenProvider, times(1)).generateAccessToken(String.valueOf(userId), nickname,
+            oauthId);
+        verify(jwtTokenProvider, times(1)).generateRefreshToken(String.valueOf(userId), nickname,
+            oauthId);
     }
 
     @Test
@@ -145,8 +148,8 @@ class UserServiceTest {
         Cookie cookie = null;
 
         // When & Then
-        assertThatThrownBy(() -> userService.refresh(cookie))
-                .isInstanceOf(TokenNotFoundException.class);
+        assertThatThrownBy(() -> userService.updateRefresh(cookie))
+            .isInstanceOf(TokenNotFoundException.class);
 
         // verify: Mock 객체의 메서드가 호출되지 않았는지 검증
         verify(jwtTokenProvider, never()).validateToken(any());
@@ -160,8 +163,8 @@ class UserServiceTest {
         Cookie cookie = new Cookie("refreshToken", null);
 
         // When & Then
-        assertThatThrownBy(() -> userService.refresh(cookie))
-                .isInstanceOf(TokenInvalidException.class);
+        assertThatThrownBy(() -> userService.updateRefresh(cookie))
+            .isInstanceOf(TokenInvalidException.class);
 
         verify(jwtTokenProvider, never()).validateToken(any());
         verify(userRepository, never()).findById(any());
@@ -174,8 +177,8 @@ class UserServiceTest {
         Cookie cookie = new Cookie("refreshToken", "");
 
         // When & Then
-        assertThatThrownBy(() -> userService.refresh(cookie))
-                .isInstanceOf(TokenInvalidException.class);
+        assertThatThrownBy(() -> userService.updateRefresh(cookie))
+            .isInstanceOf(TokenInvalidException.class);
 
         verify(jwtTokenProvider, never()).validateToken(any());
         verify(userRepository, never()).findById(any());
@@ -189,11 +192,12 @@ class UserServiceTest {
         Cookie cookie = new Cookie("refreshToken", refreshToken);
 
         // Mocking: validateToken이 RuntimeException을 던지도록 설정
-        when(jwtTokenProvider.validateToken(refreshToken)).thenThrow(new RuntimeException("Invalid token"));
+        when(jwtTokenProvider.validateToken(refreshToken)).thenThrow(
+            new RuntimeException("Invalid token"));
 
         // When & Then
-        assertThatThrownBy(() -> userService.refresh(cookie))
-                .isInstanceOf(UnknownTokenException.class);
+        assertThatThrownBy(() -> userService.updateRefresh(cookie))
+            .isInstanceOf(UnknownTokenException.class);
 
         verify(jwtTokenProvider, times(1)).validateToken(refreshToken);
         verify(jwtTokenProvider, never()).getUserId(any());
@@ -220,8 +224,8 @@ class UserServiceTest {
         when(userRepository.findById(Long.parseLong(userId))).thenReturn(Optional.of(user));
 
         // When & Then
-        assertThatThrownBy(() -> userService.refresh(cookie))
-                .isInstanceOf(TokenMismatchException.class);
+        assertThatThrownBy(() -> userService.updateRefresh(cookie))
+            .isInstanceOf(TokenMismatchException.class);
 
         verify(jwtTokenProvider, times(1)).validateToken(refreshToken);
         verify(jwtTokenProvider, times(1)).getUserId(refreshToken);

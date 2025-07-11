@@ -6,13 +6,14 @@ import static com.wedvice.user.entity.QUser.user;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.wedvice.user.dto.QUserDto;
 import com.wedvice.user.dto.UserDto;
-import com.wedvice.user.entity.QUser;
 import com.wedvice.user.entity.User;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
+@Repository
 public class UserCustomRepositoryImpl implements UserCustomRepository {
 
     private final JPAQueryFactory queryFactory;
@@ -32,10 +33,10 @@ public class UserCustomRepositoryImpl implements UserCustomRepository {
 
     @Override
     public Optional<User> findByUserWithCoupleAndPartner(Long userId) {
-        QUser partner = new QUser("partner");
+//        QUser partner = new QUser("partner");
         return Optional.ofNullable(queryFactory.selectFrom(user)
             .leftJoin(user.couple, couple).fetchJoin()
-            .leftJoin(couple.users, partner).fetchJoin()
+//            .leftJoin(couple.users, partner).fetchJoin()
             .where(user.id.eq(userId))
             .fetchOne());
     }

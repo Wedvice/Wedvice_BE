@@ -8,13 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.NotMatchedYetException;
 import com.wedvice.couple.exception.PartnerNotFoundException;
@@ -23,7 +16,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("User 엔티티 단위 테스트")
@@ -49,7 +41,7 @@ class UserTest {
             assertEquals(oauthId, user.getOauthId());
             assertEquals(provider, user.getProvider());
             assertEquals(User.Role.USER, user.getRole());
-            assertNotEquals(User.Role.GROOM,user.getRole());
+            assertNotEquals(User.Role.GROOM, user.getRole());
         }
     }
 
@@ -253,7 +245,7 @@ class UserTest {
         void shouldMatchCouple() {
             // Given
             User user = User.create("oauthId5", "provider5");
-            User partnerUser = User.create("partner","provider6");
+            User partnerUser = User.create("partner", "provider6");
 
             Couple couple = Couple.create();
 
@@ -264,14 +256,14 @@ class UserTest {
             // Then
             assertNotNull(user.getCouple());
             assertNotNull(partnerUser.getCouple());
-            assertEquals(partnerUser.getCouple(),user.getCouple());
+            assertEquals(partnerUser.getCouple(), user.getCouple());
             assertEquals(2, user.getCouple().getUsers().size());
-            assertEquals(user.getCouple().getUsers().get(0),user);
+            assertEquals(user.getCouple().getUsers().get(0), user);
 
             assertEquals(couple, user.getCouple());
             assertTrue(couple.getUsers().contains(user));
             assertTrue(couple.getUsers().contains(partnerUser));
-            assertEquals(couple.getUsers().size(),2);
+            assertEquals(couple.getUsers().size(), 2);
 
         }
     }
@@ -279,6 +271,7 @@ class UserTest {
     @Nested
     @DisplayName("getPartnerOrThrow 메서드")
     class GetPartnerOrThrow {
+
         @Test
         @DisplayName("파트너가 존재한다면 파트너를 반환한다.")
         void returnPartner() {
@@ -325,6 +318,7 @@ class UserTest {
     @Nested
     @DisplayName("isMatched 메서드")
     class IsMatched {
+
         @Test
         @DisplayName("커플이 존재하면 true를 반환한다.")
         void coupleExistReturnTrue() {
@@ -341,11 +335,12 @@ class UserTest {
     @Nested
     @DisplayName("isInfoCompleted 메서드")
     class IsInfoCompleted {
+
         @Test
         @DisplayName("닉네임과 역할이 모두 존재하면 true를 반환한다.")
         void returnTrueIfNicknameAndRoleExist() {
             User user = User.create("id", "kakao");
-            user.updateNickname("닉네임");
+            user.updateNickname("닉네");
             user.updateRole(User.Role.GROOM); // Role.USER든 GROOM이든 중요하지 않음
             assertThat(user.isInfoCompleted()).isTrue();
         }
@@ -362,7 +357,7 @@ class UserTest {
         @DisplayName("역할이 없으면 false를 반환한다.")
         void returnFalseIfRoleIsNull() {
             User user = User.create("id", "kakao");
-            user.updateNickname("닉네임");
+            user.updateNickname("닉네");
             user.updateRole(null); // 명시적으로 role 제거
             assertThat(user.isInfoCompleted()).isFalse();
         }
@@ -379,6 +374,7 @@ class UserTest {
     @Nested
     @DisplayName("isPartnerInfoCompleted 메서드")
     class IsPartnerInfoCompleted {
+
         User user;
         User partner;
         Couple couple;

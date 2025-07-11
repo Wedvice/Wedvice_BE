@@ -107,7 +107,7 @@ class CoupleServiceTest {
 // 파트너 정보
             String partnerOauthId = "partnerOauthId";
             String partnerProvider = "naver";
-            String partnerNickname = "파트너";
+            String partnerNickname = "파트";
             String partnerImage = "프로필2";
             String partnerMemo = "멍청이";
             Role partnerRole = Role.BRIDE;
@@ -221,7 +221,7 @@ class CoupleServiceTest {
             partnerId = 2L;
 
             userNickname = "유저";
-            partnerNickname = "파트너";
+            partnerNickname = "파트";
 
             userOauthId = "userOauthId";
             partnerOauthId = "partnerOauthId";

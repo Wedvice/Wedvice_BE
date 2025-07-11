@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("UserService 단위 테스트-JH")
 public class UserServiceUnitTest {
 
     @InjectMocks
