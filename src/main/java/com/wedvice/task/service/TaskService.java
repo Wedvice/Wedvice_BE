@@ -39,9 +39,9 @@ public class TaskService {
 
         Long coupleId = user.getCouple().getId();
 
-        List<CoupleTask> tasks = coupleTaskRepository.findByCoupleIdWithTask(coupleId);
+        List<CoupleTask> coupleTasks = coupleTaskRepository.findByCoupleIdWithTask(coupleId);
 
-        return tasks.stream()
+        return coupleTasks.stream()
                 .map(ct -> new TaskResponseDTO(
                         ct.getTask().getId(),
                         ct.getTask().getTitle(),
@@ -51,16 +51,15 @@ public class TaskService {
                 .collect(Collectors.toList());
     }
 
-    public void delete(Long taskId, CustomUserDetails customUserDetails) {
-
-
+    public void deleteTasks(List<Long> taskIds, CustomUserDetails customUserDetails) {
         Long userId = customUserDetails.getUserId();
         User user = userRepository.findById(userId).orElseThrow();
         Long coupleId = user.getCouple().getId();
-//        커플task 리포지토리에서 찾고 딜리트로 바꾼다.
-        CoupleTask coupleTask = coupleTaskRepository.findByIdAndCoupleId(taskId, coupleId).orElseThrow();
 
-        coupleTask.updateDeleteStatus();
-
+        taskIds.forEach(taskId -> {
+            CoupleTask coupleTask = coupleTaskRepository.findByTaskIdAndCoupleId(taskId, coupleId)
+                                                .orElseThrow(() -> new RuntimeException("Task not found or permission denied for taskId: " + taskId)); // 예외처리 구체화
+            coupleTask.updateDeleteStatus();
+        });
     }
 }

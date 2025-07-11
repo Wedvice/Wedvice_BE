@@ -44,7 +44,7 @@ public class CoupleTask extends BaseEntity {
 
 
     // private 생성자 (빌더 패턴용)
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     private CoupleTask(Couple couple, Task task) {
         this.couple = couple;
         this.task = task;

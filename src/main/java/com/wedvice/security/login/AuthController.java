@@ -47,7 +47,7 @@ public class AuthController {
   public ResponseEntity<?> refresh(
       @CookieValue(name = "refreshToken", required = false) Cookie cookie) {
 
-    Map<String, Object> result = userService.refresh(cookie);
+    Map<String, Object> result = userService.updateRefresh(cookie);
     HttpHeaders headers = (HttpHeaders) result.get("headers");
     Object body = result.get("body");
 

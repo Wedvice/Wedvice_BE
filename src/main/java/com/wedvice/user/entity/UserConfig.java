@@ -26,8 +26,11 @@ public class UserConfig {
 
     private LocalDateTime weddingDate;
 
+    @Enumerated(EnumType.STRING)
     private Color myColor; // 예: "light", "dark", "purple" 등
+    @Enumerated(EnumType.STRING)
     private Color yourColor;
+    @Enumerated(EnumType.STRING)
     private Color ourColor;
 
     private String language;   // 예: "ko", "en"

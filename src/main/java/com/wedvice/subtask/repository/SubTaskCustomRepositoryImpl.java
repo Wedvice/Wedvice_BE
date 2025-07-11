@@ -10,15 +10,14 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.wedvice.subtask.dto.CompleteRateResponseDto;
-import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
+import com.wedvice.subtask.dto.HomeSubTaskConditionDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
+import com.wedvice.subtask.entity.SubTask;
 import com.wedvice.user.entity.User;
+import com.wedvice.user.entity.User.Role;
 import java.util.List;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 
 
 @RequiredArgsConstructor
@@ -26,39 +25,14 @@ public class SubTaskCustomRepositoryImpl implements SubTaskCustomRepository {
 
   private final JPAQueryFactory queryFactory;
 
-  public List<SubTaskResponseDTO> getSubTasks(Long userId, Long taskId) {
+  public List<SubTask> getSubTasks(Long userId, Long taskId,Long coupleId) {
 
-    // 커플 ID 찾기
-    Long coupleId = queryFactory
-        .select(user.couple.id)
-        .from(user)
-        .where(user.id.eq(userId))
-        .fetchOne();
-
-//        리포지토리는 db관련 작업만 이 작업은 서비스로 넘기기.
-        if (coupleId == null) return List.of();
-
-        // DTO로 뽑기
-//        db -> db에서 컬럼 몇개 더 조회해온다고 성능저하가 발생하진 않고
-//        join문이나 where절 인덱스 걸러내는거
-//        엔티티를 조회해와서 그 연관관계를 쓰다보니 lazy-loadingㅇㅣ 발생하고 fetchjoin으로
-//        해결하는데 이거에 대한 또 문제가 있고. 이거를 또 해결하기 위한 .....
-//        저는 mybatis도 분석 List<Order> Lazy-loading , eager(X), fetchjoin
         return queryFactory
-                .select(Projections.constructor(
-                        SubTaskResponseDTO.class,
-                        subTask.id,
-                        subTask.displayName,
-                        subTask.completed,
-                        subTask.role.stringValue(),
-                        subTask.price,
-                        subTask.targetDate,
-                        subTask.content,
-                        subTask.orders
-                ))
+                .select(subTask)
+
+
                 .from(subTask)
-                .join(subTask.coupleTask, coupleTask)
-                .join(coupleTask.task, task)
+                .join(subTask.coupleTask, coupleTask).fetchJoin()
                 .where(
                         coupleTask.couple.id.eq(coupleId),
                         coupleTask.task.id.eq(taskId),
@@ -68,94 +42,59 @@ public class SubTaskCustomRepositoryImpl implements SubTaskCustomRepository {
                 .fetch();
     }
 
-  @Override
-  public Slice<SubTaskHomeResponseDto> findHomeSubTasksByCondition(Long userId,
-      Boolean completed,
-      boolean top3,
-      User.Role role,
-      String sortType,
-      Pageable pageable) {
-    // 커플 ID 찾기
-    Long coupleId = queryFactory
-        .select(user.couple.id)
-        .from(user)
-        .where(user.id.eq(userId))
-        .fetchOne();
+    @Override
+    public List<SubTask> findHomeSubTasksByCondition(
+        HomeSubTaskConditionDto homeSubTaskConditionDto) {
+        Long coupleId = homeSubTaskConditionDto.getCoupleId();
+        Boolean completed = homeSubTaskConditionDto.getCompleted();
+        boolean top3 = homeSubTaskConditionDto.isTop3();
+        User.Role role = homeSubTaskConditionDto.getRole();
+        String sortType = homeSubTaskConditionDto.getSort();
+        Pageable pageable = homeSubTaskConditionDto.getPageable();
 
-    if (coupleId == null) {
-      return new SliceImpl<>(List.of());
+        // 2. SubTask 데이터 조회 (Entity fetch → DTO 변환)
+        return queryFactory
+            .selectFrom(subTask)
+            .join(subTask.coupleTask, coupleTask)
+            .join(coupleTask.task, task)
+            .where(
+                coupleTask.couple.id.eq(coupleId),
+                completedEq(completed),
+                roleEq(role)
+            )
+            .orderBy(getOrderSpecifiers(sortType, top3))
+            .offset(top3 ? 0 : pageable.getOffset())
+            .limit(top3 ? 3 : pageable.getPageSize() + 1)
+            .fetch();
     }
 
-    // 2. SubTask 데이터 조회 (Entity fetch → DTO 변환)
-    List<SubTaskHomeResponseDto> results = queryFactory
-        .selectFrom(subTask)
-        .join(subTask.coupleTask, coupleTask)
-        .join(coupleTask.task, task)
-        .where(
-            coupleTask.couple.id.eq(coupleId),
-            completedEq(completed),
-            roleEq(role)
-        )
-        .orderBy(getOrderSpecifiers(sortType, top3))
-        .offset(top3 ? 0 : pageable.getOffset())
-        .limit(top3 ? 3 : pageable.getPageSize() + 1)
-        .fetch()
-        .stream()
-        .map(st -> SubTaskHomeResponseDto.builder()
-            .subTaskId(st.getId())
-            .coupleTaskId(st.getCoupleTask().getId())
-            .subTaskContent(st.getContent())
-            .taskContent(st.getCoupleTask().getTask().getTitle())
-            .targetDate(st.getTargetDate())
-            .completed(st.getCompleted())
-            .orders(st.getOrders())
-            .build())
-        .collect(Collectors.toList());
-
-    // 3. Slice 처리
-    boolean hasNext = !top3 && results.size() > pageable.getPageSize();
-    if (hasNext) {
-      results.remove(results.size() - 1); // 초과분 제거
-    }
-
-    return new SliceImpl<>(results, pageable, hasNext);
-  }
-
-  @Override
-  public CompleteRateResponseDto getProgressRate(Long userId) {
-    // 커플 ID 조회
-    Long coupleId = queryFactory
-        .select(user.couple.id)
-        .from(user)
-        .where(user.id.eq(userId))
-        .fetchOne();
-
-    if (coupleId == null) {
-      return new CompleteRateResponseDto(0, 0, 0);
-    }
-
-    // 전체 SubTask 개수
-    Long total = queryFactory
-        .select(subTask.count())
-        .from(subTask)
-        .join(subTask.coupleTask, coupleTask)
-        .where(coupleTask.couple.id.eq(coupleId))
-        .fetchOne();
+    @Override
+    public CompleteRateResponseDto getProgressRate(Long coupleId, Role filterRole) {
+        BooleanExpression idCondition = coupleTask.couple.id.eq(coupleId);
+        BooleanExpression roleCondition = roleEq(filterRole);
+        // 전체 SubTask 개수
+        Long total = queryFactory
+            .select(subTask.count())
+            .from(subTask)
+            .join(subTask.coupleTask, coupleTask)
+            .where(idCondition, roleCondition)
+            .fetchOne();
 
     if (total == null || total == 0) {
       return new CompleteRateResponseDto(0, 0, 0);
     }
 
-    // 완료된 SubTask 개수
-    Long completed = queryFactory
-        .select(subTask.count())
-        .from(subTask)
-        .join(subTask.coupleTask, coupleTask)
-        .where(
-            coupleTask.couple.id.eq(coupleId),
-            subTask.completed.isTrue()
-        )
-        .fetchOne();
+        // 완료된 SubTask 개수
+        Long completed = queryFactory
+            .select(subTask.count())
+            .from(subTask)
+            .join(subTask.coupleTask, coupleTask)
+            .where(
+                idCondition,
+                roleCondition,
+                subTask.completed.isTrue()
+            )
+            .fetchOne();
 
     int percent = (int) Math.round((completed * 100.0) / total);
 

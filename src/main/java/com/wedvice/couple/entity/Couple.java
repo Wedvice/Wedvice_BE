@@ -1,19 +1,23 @@
 package com.wedvice.couple.entity;
 
 import com.wedvice.common.BaseTimeEntity;
-import com.wedvice.couple.exception.SamePersonMatchException;
 import com.wedvice.coupletask.entity.CoupleTask;
 import com.wedvice.task.entity.Task;
 import com.wedvice.user.entity.User;
-import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-
-import org.hibernate.annotations.BatchSize;
-
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Getter
@@ -36,13 +40,9 @@ public class Couple extends BaseTimeEntity {
     private List<CoupleTask> coupleTasks;
 
 
-
-
-
     /**
      * 메서드 시작
      */
-
 
 // Couple.java
 //    public void addUser(User user) {
@@ -61,9 +61,8 @@ public class Couple extends BaseTimeEntity {
 //        return couple;
 //    }
 
-
     // protected 생성자 (빌더 패턴용)
-    @Builder
+    @Builder(access = AccessLevel.PRIVATE)
     protected Couple() {
         this.users = new ArrayList<>();
         this.coupleTasks = new ArrayList<>();
@@ -72,7 +71,7 @@ public class Couple extends BaseTimeEntity {
     // 정적 팩토리 메서드
     public static Couple create() {
         return Couple.builder()
-                .build();
+            .build();
     }
 
     // 연관관계 편의 메서드

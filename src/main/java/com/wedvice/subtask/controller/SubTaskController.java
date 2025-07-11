@@ -1,16 +1,19 @@
 package com.wedvice.subtask.controller;
 
 import com.wedvice.common.ApiResponse;
+import com.wedvice.coupletask.service.CoupleTaskService;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
 import com.wedvice.subtask.dto.CompleteRateResponseDto;
 import com.wedvice.subtask.dto.CreateSubTaskRequestDTO;
+import com.wedvice.subtask.dto.SubTaskAlignRequestDTO;
 import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
 import com.wedvice.subtask.service.SubTaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class SubTaskController {
 
   private final SubTaskService subTaskService;
+  private final CoupleTaskService coupleTaskService;
 
   @GetMapping
   public List<SubTaskResponseDTO> get(@LoginUser CustomUserDetails loginUser, long taskId) {
@@ -44,33 +49,41 @@ public class SubTaskController {
 
   }
 
+  @GetMapping("/price")
+  public void getAllCoupleTaskPrice(@LoginUser CustomUserDetails loginUser) {
+
+//    회원의 모든 coupletask의 subtask를 조회하여 금액을 계산한다. (전체 금액 확인)
+    coupleTaskService.getCoupleTasksWithSubTaskInfo(loginUser.getUserId());
+  }
+
   @PatchMapping("/align")
-  public String patchAlign() {
+  public String patchAlign(@LoginUser CustomUserDetails loginUser, @RequestBody SubTaskAlignRequestDTO requestDTO) {
+    subTaskService.updateSubTaskOrders(loginUser.getUserId(), requestDTO.getSubTaskIds());
     return "subtask 정렬 위치 변경";
   }
 
 
 
     @PostMapping()
-    public String post(@RequestBody CreateSubTaskRequestDTO createSubTaskRequestDTO) {
+    public String post(@LoginUser CustomUserDetails loginUser, @Valid @RequestBody CreateSubTaskRequestDTO createSubTaskRequestDTO) {
 
         log.info("========== "+createSubTaskRequestDTO);
-
+        subTaskService.createSubTask(loginUser.getUserId(), createSubTaskRequestDTO);
 
         return "create subtask success";
     }
 
 
-    @DeleteMapping()
-    public String delete(@RequestBody Long subTaskId) {
+    @DeleteMapping("/{subTaskId}")
+    public String delete(@LoginUser CustomUserDetails loginUser, @PathVariable Long subTaskId) {
+        subTaskService.deleteSubTask(loginUser.getUserId(), subTaskId);
         return "delete subtask";
     }
 
-    @PatchMapping
-    public String subTaskCompleted(){
-
+    @PatchMapping("/{subTaskId}/completed")
+    public String subTaskCompleted(@LoginUser CustomUserDetails loginUser, @PathVariable Long subTaskId){
+        subTaskService.updateSubTaskCompletedStatus(loginUser.getUserId(), subTaskId);
         return "subtask status change completed";
-
     }
 
 
@@ -100,11 +113,20 @@ public class SubTaskController {
     return ResponseEntity.ok(ApiResponse.success(responseDto));
   }
 
-  @GetMapping("/progress")
-  @Operation(summary = "완료율 조회", description = "커플의 전체 SubTask 완료율을 조회합니다.")
-  public ResponseEntity<ApiResponse<CompleteRateResponseDto>> getProgress(
-      @LoginUser CustomUserDetails loginUser) {
-    CompleteRateResponseDto responseDto = subTaskService.getProgressRate(loginUser.getUserId());
-    return ResponseEntity.ok(ApiResponse.success(responseDto));
-  }
+    @GetMapping("/progress")
+    @Operation(summary = "완료율 조회", description = "커플의 전체 SubTask 완료율을 조회합니다.")
+    public ResponseEntity<ApiResponse<CompleteRateResponseDto>> getProgress(
+        @LoginUser CustomUserDetails loginUser,
+
+        @Parameter(
+            name = "role",
+            description = "조회할 역할 (GROOM: 신랑, BRIDE: 신부, TOGETHER: 함께). 미지정 시 전체 기준으로 계산됩니다.",
+            required = false,
+            example = "GROOM"
+        )
+        @RequestParam(name = "role", required = false) String role) {
+        CompleteRateResponseDto responseDto = subTaskService.getProgressRate(loginUser.getUserId(),
+            role);
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
+    }
 }

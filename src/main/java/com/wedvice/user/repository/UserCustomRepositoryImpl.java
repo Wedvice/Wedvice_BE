@@ -1,32 +1,52 @@
 package com.wedvice.user.repository;
 
+import static com.wedvice.couple.entity.QCouple.couple;
+import static com.wedvice.user.entity.QUser.user;
+
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.wedvice.user.dto.QUserDto;
 import com.wedvice.user.dto.UserDto;
-import lombok.RequiredArgsConstructor;
-
+import com.wedvice.user.entity.User;
 import java.util.List;
-
-import static com.wedvice.user.entity.QUser.*;
+import java.util.Optional;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 @RequiredArgsConstructor
-public class UserCustomRepositoryImpl implements UserCustomRepository{
-
+@Repository
+public class UserCustomRepositoryImpl implements UserCustomRepository {
 
     private final JPAQueryFactory queryFactory;
-
 
 
     @Override
     public List<UserDto> getAllUserTestExample() {
 
         List<UserDto> userList = queryFactory.
-                select(new QUserDto(user.id, user.nickname, user.profileImageUrl, user.memo
-                        ))
-                .from(user)
-                .fetch();
-
+            select(new QUserDto(user.id, user.nickname, user.profileImageUrl, user.memo
+            ))
+            .from(user)
+            .fetch();
 
         return userList;
+    }
+
+    @Override
+    public Optional<User> findByUserWithCoupleAndPartner(Long userId) {
+//        QUser partner = new QUser("partner");
+        return Optional.ofNullable(queryFactory.selectFrom(user)
+            .leftJoin(user.couple, couple).fetchJoin()
+//            .leftJoin(couple.users, partner).fetchJoin()
+            .where(user.id.eq(userId))
+            .fetchOne());
+    }
+
+    @Override
+    public Long findCoupleIdByUserId(Long userId) {
+        return queryFactory
+            .select(user.couple.id)
+            .from(user)
+            .where(user.id.eq(userId))
+            .fetchOne();
     }
 }

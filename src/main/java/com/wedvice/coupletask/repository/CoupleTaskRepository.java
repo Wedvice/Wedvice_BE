@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface CoupleTaskRepository extends JpaRepository<CoupleTask, Long> {
+public interface CoupleTaskRepository extends JpaRepository<CoupleTask, Long> , CoupleTaskCustomRepository {
 
     boolean findByCouple(Couple couple);
 
@@ -19,6 +19,6 @@ public interface CoupleTaskRepository extends JpaRepository<CoupleTask, Long> {
     public List<CoupleTask> findByCoupleIdWithTask(@Param("coupleId") Long coupleId);
 
 
-    public Optional<CoupleTask> findByIdAndCoupleId(Long taskId,Long  coupleId);
+    public Optional<CoupleTask> findByTaskIdAndCoupleId(Long taskId,Long  coupleId);
 
 }

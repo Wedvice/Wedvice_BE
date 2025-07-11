@@ -10,12 +10,14 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SubTaskResponseDTO {
+    private Long coupleTaskId;
     private Long subTaskId;
     private String displayName;
     private Boolean completed;
     private String role;
     private Integer price;
     private LocalDate targetDate;
+    private LocalDate completedDate;
     private String contents;
     private Integer orders;
 }
