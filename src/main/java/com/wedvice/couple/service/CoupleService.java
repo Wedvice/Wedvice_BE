@@ -8,11 +8,9 @@ import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.AlreadyMatchedException;
 import com.wedvice.couple.exception.InvalidUserAccessException;
 import com.wedvice.couple.exception.MatchCodeExpiredException;
-import com.wedvice.couple.exception.NoTowPeopleException;
 import com.wedvice.couple.exception.NotMatchedYetException;
 import com.wedvice.couple.exception.PartnerIncompleteException;
 import com.wedvice.couple.exception.PartnerMustEnterMatchCode;
-import com.wedvice.couple.exception.PartnerNotFoundException;
 import com.wedvice.couple.exception.SamePersonMatchException;
 import com.wedvice.couple.exception.SameRoleException;
 import com.wedvice.couple.exception.UserNotFoundException;
@@ -20,8 +18,8 @@ import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.couple.util.MatchCodeService;
 import com.wedvice.task.service.TaskService;
 import com.wedvice.user.entity.User;
+import com.wedvice.user.entity.User.Role;
 import com.wedvice.user.repository.UserRepository;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,6 +40,7 @@ public class CoupleService {
     public void matchCouple(long userId, String matchCode) {
         long pid = matchCodeService
             .getCodeUserId(matchCode)
+
             .orElseThrow(() -> new MatchCodeExpiredException(matchCode));
 
         User user = userRepository.findById(userId)
@@ -73,7 +72,7 @@ public class CoupleService {
         User user = userRepository.findByUserWithCoupleAndPartner(userId)
             .orElseThrow(InvalidUserAccessException::new);
 
-        if (user.getRole() != null) {
+        if (user.getRole() == Role.BRIDE || user.getRole() == Role.GROOM) {
             throw new AlreadyMatchedException();
         }
 
@@ -94,27 +93,19 @@ public class CoupleService {
             .orElseThrow(InvalidUserAccessException::new);
 
         Couple couple = user.getCouple();
-        if (couple == null) {
-            throw new PartnerMustEnterMatchCode(); // 매치코드 입력 단계
+        if (!user.isMatched()) {
+            throw new PartnerMustEnterMatchCode();
         }
 
-        if (user.getNickname() == null || user.getRole() == null) {
-            throw new NotMatchedYetException(); // 닉네임 or 성별 미입력
+        if (!user.isInfoCompleted()) {
+            throw new NotMatchedYetException();
         }
 
-        List<User> users = couple.getUsers();
-        if (users == null || users.size() != 2) {
-            throw new NoTowPeopleException();
-        }
-
-        User partner = users.stream()
-            .filter(u -> !u.getId().equals(userId))
-            .findFirst()
-            .orElseThrow(PartnerNotFoundException::new);
-
-        if (partner.getNickname() == null || partner.getRole() == null) {
+        if (!user.isPartnerInfoCompleted()) {
             throw new PartnerIncompleteException();
         }
+
+        User partner = user.getPartnerOrThrow();
 
         // 신랑/신부 구분
         User groom = user.getRole() == User.Role.GROOM ? user : partner;
