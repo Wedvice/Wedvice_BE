@@ -23,6 +23,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 //            "/auth/status",
       "/test-auth/token/-1",
       "/test-auth/token/-2",
+      "/custom/redirect-to-oauth",
       "/login/oauth2/code/kakao",
       "/oauth2/authorization/kakao",
       "/swagger-ui/index.html",

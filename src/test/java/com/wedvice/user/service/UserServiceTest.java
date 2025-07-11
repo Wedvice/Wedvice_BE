@@ -1,6 +1,8 @@
 package com.wedvice.user.service;
 
 import com.wedvice.security.login.JwtTokenProvider;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.wedvice.user.entity.User;
 import com.wedvice.user.exception.TokenInvalidException;
 import com.wedvice.user.exception.TokenMismatchException;

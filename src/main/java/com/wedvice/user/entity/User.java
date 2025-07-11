@@ -2,7 +2,20 @@ package com.wedvice.user.entity;
 
 import com.wedvice.common.BaseTimeEntity;
 import com.wedvice.couple.entity.Couple;
-import jakarta.persistence.*;
+import com.wedvice.couple.exception.NotMatchedYetException;
+import com.wedvice.couple.exception.PartnerNotFoundException;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -52,16 +65,14 @@ public class User extends BaseTimeEntity {
     private UserConfig userConfig;
 
 
-
     /**
      * 메서드 시작
      */
 
-
-
     // private 생성자 (빌더 패턴용)
     @Builder(access = AccessLevel.PRIVATE)
-    private User(String oauthId, String provider, String nickname, String profileImageUrl, String memo, String refreshToken, String email, Role role) {
+    private User(String oauthId, String provider, String nickname, String profileImageUrl,
+        String memo, String refreshToken, String email, Role role) {
         this.oauthId = oauthId;
         this.provider = provider;
         this.nickname = nickname;
@@ -76,10 +87,10 @@ public class User extends BaseTimeEntity {
     // 정적 팩토리 메서드
     public static User create(String oauthId, String provider) {
         return User.builder()
-                .oauthId(oauthId)
-                .provider(provider)
-                .role(Role.USER) // 기본 역할 유저 -> 매칭안된상태
-                .build();
+            .oauthId(oauthId)
+            .provider(provider)
+            .role(Role.USER) // 기본 역할 유저 -> 매칭안된상태
+            .build();
     }
 
     // 테스트용 정적 팩토리 메서드 (엔티티 내부 유효성 검사 우회)
@@ -120,7 +131,7 @@ public class User extends BaseTimeEntity {
         this.nickname = nickname;
     }
 
-    public void updateProfileImage(String profileImageUrl){
+    public void updateProfileImage(String profileImageUrl) {
         this.profileImageUrl = profileImageUrl;
     }
 
@@ -143,8 +154,37 @@ public class User extends BaseTimeEntity {
         this.role = role;
     }
 
+
+    // 도메인 내부: 상태 판단만 담당
+    public boolean isMatched() {
+        return this.couple != null;
+    }
+
+    public boolean isInfoCompleted() {
+        return this.nickname != null && this.role != null;
+    }
+
+    public boolean isPartnerInfoCompleted() {
+        try {
+            return getPartnerOrThrow().isInfoCompleted();
+        } catch (PartnerNotFoundException e) {
+            return false; // 파트너가 없으면 info도 당연히 불완전
+        }
+    }
+
+    public User getPartnerOrThrow() {
+        if (this.couple == null) {
+            throw new NotMatchedYetException();
+        }
+
+        return this.couple.getUsers().stream()
+            .filter(u -> !u.getId().equals(this.id))
+            .findFirst()
+            .orElseThrow(PartnerNotFoundException::new);
+    }
+
     @Getter
-    public static enum Role {
+    public enum Role {
 
         GROOM("신랑"),
         BRIDE("신부"),

@@ -8,10 +8,23 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.wedvice.couple.entity.Couple;
+import com.wedvice.couple.exception.NotMatchedYetException;
+import com.wedvice.couple.exception.PartnerNotFoundException;
+import com.wedvice.user.entity.User.Role;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import org.springframework.test.util.ReflectionTestUtils;
 
 @DisplayName("User 엔티티 단위 테스트")
 class UserTest {
@@ -260,6 +273,166 @@ class UserTest {
             assertTrue(couple.getUsers().contains(partnerUser));
             assertEquals(couple.getUsers().size(),2);
 
+        }
+    }
+
+    @Nested
+    @DisplayName("getPartnerOrThrow 메서드")
+    class GetPartnerOrThrow {
+        @Test
+        @DisplayName("파트너가 존재한다면 파트너를 반환한다.")
+        void returnPartner() {
+            //given
+            User user = User.create("userId", "kakao");
+            User partner = User.create("partnerId", "naver");
+            Couple couple = Couple.create();
+
+            ReflectionTestUtils.setField(user, "id", 1L);
+            ReflectionTestUtils.setField(partner, "id", 2L);
+
+            user.matchCouple(couple);
+            partner.matchCouple(couple);
+
+            //when & then
+            assertThat(user.getPartnerOrThrow()).isEqualTo(partner);
+        }
+
+        @Test
+        @DisplayName("파트너가 존재하지 않는다면 에러를 반환한다.")
+        void throwNotMatchedYetException() {
+            //given
+            User user = User.create("userId", "kakao");
+            Couple couple = Couple.create();
+
+            user.matchCouple(couple);
+            ReflectionTestUtils.setField(user, "id", 1L);
+
+            //when & then
+            assertThrows(PartnerNotFoundException.class, user::getPartnerOrThrow);
+        }
+
+        @Test
+        @DisplayName("커플이 존재하지 않는다면 에러를 반환한다.")
+        void throwNotCoupleException() {
+            //given
+            User user = User.create("userId", "kakao");
+
+            //when & then
+            assertThrows(NotMatchedYetException.class, user::getPartnerOrThrow);
+        }
+    }
+
+    @Nested
+    @DisplayName("isMatched 메서드")
+    class IsMatched {
+        @Test
+        @DisplayName("커플이 존재하면 true를 반환한다.")
+        void coupleExistReturnTrue() {
+
+        }
+
+        @Test
+        @DisplayName("커플이 존재하지 않으면 false를 반환한다.")
+        void coupleNotExistReturnTrue() {
+        }
+    }
+
+    // [issue] updateRole에서 null명시적 변환이 가능한것 도메인에서 체크해야하지 않나?
+    @Nested
+    @DisplayName("isInfoCompleted 메서드")
+    class IsInfoCompleted {
+        @Test
+        @DisplayName("닉네임과 역할이 모두 존재하면 true를 반환한다.")
+        void returnTrueIfNicknameAndRoleExist() {
+            User user = User.create("id", "kakao");
+            user.updateNickname("닉네임");
+            user.updateRole(User.Role.GROOM); // Role.USER든 GROOM이든 중요하지 않음
+            assertThat(user.isInfoCompleted()).isTrue();
+        }
+
+        @Test
+        @DisplayName("닉네임이 없으면 false를 반환한다.")
+        void returnFalseIfNicknameIsNull() {
+            User user = User.create("id", "kakao");
+            user.updateRole(User.Role.GROOM);
+            assertThat(user.isInfoCompleted()).isFalse();
+        }
+
+        @Test
+        @DisplayName("역할이 없으면 false를 반환한다.")
+        void returnFalseIfRoleIsNull() {
+            User user = User.create("id", "kakao");
+            user.updateNickname("닉네임");
+            user.updateRole(null); // 명시적으로 role 제거
+            assertThat(user.isInfoCompleted()).isFalse();
+        }
+
+        @Test
+        @DisplayName("닉네임과 역할이 모두 없으면 false를 반환한다.")
+        void returnFalseIfBothNull() {
+            User user = User.create("id", "kakao");
+            user.updateRole(null); // 명시적
+            assertThat(user.isInfoCompleted()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("isPartnerInfoCompleted 메서드")
+    class IsPartnerInfoCompleted {
+        User user;
+        User partner;
+        Couple couple;
+
+        @BeforeEach
+        void setUp() {
+            user = User.create("userId", "kakao");
+            partner = User.create("partnerId", "naver");
+            couple = Couple.create();
+
+            user.matchCouple(couple);
+            partner.matchCouple(couple);
+        }
+
+        @Test
+        @DisplayName("닉네임과 역할이 온전하면 ture를 반환한다.")
+        void returnTrueIfPartnerBothExist() {
+            // given
+            partner.updateRole(Role.BRIDE);
+            partner.updateNickname("신부");
+
+            //when then
+            assertThat(partner.isInfoCompleted()).isTrue();
+        }
+
+        @Test
+        @DisplayName("파트너 정보에 닉네임이 없으면 false를 반환한다.")
+        void returnFalseIfPartnerNicknameNull() {
+            // given
+            partner.updateRole(Role.BRIDE);
+
+            //when then
+            assertThat(partner.isInfoCompleted()).isFalse();
+        }
+
+
+        @Test
+        @DisplayName("파트너 정보에 역할 없으면 false를 반환한다.")
+        void returnFalseIfPartnerRoleNull() {
+            // given
+            partner.updateRole(Role.BRIDE);
+            partner.updateRole(null);
+
+            //when then
+            assertThat(partner.isInfoCompleted()).isFalse();
+        }
+
+        @Test
+        @DisplayName("닉네임과 역할이 모두 없으면 false를 반환한다.")
+        void returnFalseIfPartnerBothNull() {
+            User user = User.create("id", "kakao");
+            user.updateRole(null); // 명시적
+
+            assertThat(user.isInfoCompleted()).isFalse();
         }
     }
 }
