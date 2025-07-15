@@ -1,14 +1,14 @@
 package com.wedvice.couple.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.time.LocalDate;
 
 @Builder
 @Getter
 public class CoupleHomeInfoResponseDto {
+
     @Schema(description = "신랑 정보")
     private UserDto groomDto;
 

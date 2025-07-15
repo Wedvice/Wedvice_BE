@@ -89,6 +89,14 @@ public class UserController {
                     mediaType = "application/json",
                     schema = @Schema(implementation = MemoRequestDto.class)
                 )
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "401",
+                description = "실패",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = MemoRequestDto.class)
+                )
             )
         })
     public ResponseEntity<ApiResponse<Void>> updateMemo(@LoginUser CustomUserDetails loginUser,
