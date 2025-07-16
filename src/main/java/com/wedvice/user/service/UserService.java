@@ -1,7 +1,6 @@
 package com.wedvice.user.service;
 
 import com.wedvice.couple.exception.InvalidUserAccessException;
-import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.security.login.JwtTokenProvider;
 import com.wedvice.security.login.RedirectEnum;
 import com.wedvice.security.login.RedirectResponseDto;
@@ -25,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
@@ -75,7 +75,8 @@ public class UserService {
 
             return createTokenResult(newAccessToken, newRefreshToken);
         } catch (RuntimeException e) {
-            if (e instanceof TokenMismatchException || e instanceof TokenNotFoundException || e instanceof TokenInvalidException) {
+            if (e instanceof TokenMismatchException || e instanceof TokenNotFoundException
+                || e instanceof TokenInvalidException) {
                 throw e;
             }
             e.printStackTrace();
@@ -166,6 +167,17 @@ public class UserService {
             .orElseThrow(InvalidUserAccessException::new);
 
         user.updateMemo(requestDto.getMemo());
+    }
+
+    @Transactional(readOnly = true)
+    public Long getCoupleIdForUser(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+
+        if (user.getCouple() == null) {
+            throw new InvalidUserAccessException();
+        }
+        return user.getCouple().getId();
     }
 }
 

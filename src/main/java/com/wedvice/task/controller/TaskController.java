@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -130,7 +131,7 @@ public class TaskController {
     @DeleteMapping()
     public ResponseEntity<ApiResponse<Void>> deleteTasks(
         @LoginUser CustomUserDetails loginUser,
-        @RequestBody DeleteTasksRequestDto requestDto) {
+        @Valid @RequestBody DeleteTasksRequestDto requestDto) {
 
         taskService.deleteTasks(requestDto.getTaskIds(), loginUser);
         return ResponseEntity.ok(ApiResponse.success(null));
