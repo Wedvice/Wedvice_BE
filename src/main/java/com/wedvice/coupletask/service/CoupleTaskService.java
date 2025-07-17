@@ -4,8 +4,6 @@ import com.wedvice.coupletask.dto.CoupleTaskWithSubTaskInfo;
 import com.wedvice.coupletask.entity.CoupleTask;
 import com.wedvice.coupletask.repository.CoupleTaskRepository;
 import com.wedvice.subtask.entity.SubTask;
-import com.wedvice.subtask.service.SubTaskService;
-import com.wedvice.task.service.TaskService;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -19,8 +17,6 @@ public class CoupleTaskService {
 
 
     private final CoupleTaskRepository coupleTaskRepository;
-    private final TaskService taskService;
-    private final SubTaskService subTaskService;
 
     @Transactional(readOnly = true)
     public List<CoupleTaskWithSubTaskInfo> getCoupleTasksWithSubTaskInfo(Long coupleId) {
@@ -36,11 +32,17 @@ public class CoupleTaskService {
 
     @Transactional
     public void softDeleteCoupleTasks(List<Long> taskIds, Long coupleId) {
-        taskIds.forEach(taskId -> {
-            CoupleTask coupleTask = coupleTaskRepository.findByTaskIdAndCoupleId(taskId, coupleId)
-                .orElseThrow(() -> new RuntimeException(
-                    "CoupleTask not found or permission denied for taskId: " + taskId));
-            coupleTask.updateDeleteStatus();
-        });
+        List<CoupleTask> coupleTasksToDelete = coupleTaskRepository.findByTaskIdsAndCoupleId(taskIds, coupleId);
+
+        if (coupleTasksToDelete.size() != taskIds.size()) {
+            throw new RuntimeException("Some tasks not found or permission denied.");
+        }
+
+        coupleTasksToDelete.forEach(CoupleTask::updateDeleteStatus);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CoupleTask> findByCoupleIdWithTask(final Long coupleId) {
+        return coupleTaskRepository.findByCoupleIdWithTask(coupleId);
     }
 }

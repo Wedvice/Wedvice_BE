@@ -7,6 +7,7 @@ import com.wedvice.task.dto.DeleteTasksRequestDto;
 import com.wedvice.task.dto.TaskResponseDTO;
 import com.wedvice.task.service.TaskService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -30,15 +31,15 @@ import org.springframework.web.bind.annotation.RestController;
     name = "coupleTask API",
     description = "👤 초기 task 탭 진입 시  API (상위 task 조회 및 삭제)"
 )
+@SecurityRequirement(name = "JWT")
 public class TaskController {
 
 
     private final TaskService taskService;
 
     @Operation(
-        summary = "커플 태스크 및 서브 태스크 조회",
-        description = "커플 매칭된 사용자가 요청 시 삭제되지 않은 coupleTask 및 subTask 목록을 반환합니다.",
-        security = @SecurityRequirement(name = "JWT"),
+        summary = "커플 태스크 및 서브 태스크 count 조회",
+        description = "커플 매칭된 사용자가 요청 시 삭제되지 않은 coupleTask 및 subTask 개수 목록을 반환합니다.",
         responses = {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공",
                 content = @Content(mediaType = "application/json",
@@ -83,15 +84,14 @@ public class TaskController {
     )
     @GetMapping()
     public ResponseEntity<ApiResponse<List<TaskResponseDTO>>> getAllTaskAndSubTask(
-        @LoginUser CustomUserDetails loginUser) {
-
-        return ResponseEntity.ok(ApiResponse.success(taskService.findAllTaskAndSubTask(loginUser)));
+        @Parameter(hidden = true) @LoginUser CustomUserDetails loginUser) {
+        return ResponseEntity.ok(
+            ApiResponse.success(taskService.findAllCoupleTaskAndSubTask(loginUser)));
     }
 
     @Operation(
         summary = "coupleTask 다중 삭제 요청",
         description = "커플 매칭된 사용자 요청 시 여러 coupleTask를 삭제 처리합니다.",
-        security = @SecurityRequirement(name = "JWT"),
         requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
             description = "삭제할 coupleTask ID 목록",
             required = true,
@@ -130,7 +130,7 @@ public class TaskController {
 
     @DeleteMapping()
     public ResponseEntity<ApiResponse<Void>> deleteTasks(
-        @LoginUser CustomUserDetails loginUser,
+        @Parameter(hidden = true) @LoginUser CustomUserDetails loginUser,
         @Valid @RequestBody DeleteTasksRequestDto requestDto) {
 
         taskService.deleteTasks(requestDto.getTaskIds(), loginUser);
