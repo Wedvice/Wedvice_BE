@@ -15,27 +15,27 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class OAuth2AuthorizationController {
 
-  @GetMapping("/redirect-to-oauth")
-  public void setRedirectUrlCookie(@RequestParam String redirectUrl,
-      HttpServletResponse response) throws IOException {
-    if (!isAllowedRedirectUrl(redirectUrl)) {
-      throw new IllegalArgumentException("허용되지 않은 URL");
+    @GetMapping("/redirect-to-oauth")
+    public void setRedirectUrlCookie(@RequestParam String redirectUrl,
+        HttpServletResponse response) throws IOException {
+        if (!isAllowedRedirectUrl(redirectUrl)) {
+            throw new IllegalArgumentException("허용되지 않은 URL");
+        }
+
+        ResponseCookie cookie = ResponseCookie.from("loginRedirectUrl", redirectUrl)
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("Lax")
+            .path("/")
+            .maxAge(Duration.ofMinutes(3))
+            .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+        log.info("[setRedirectUrlCookie] {}", cookie);
+        response.sendRedirect("/oauth2/authorization/kakao"); // Spring Security가 처리하는 실제 경로
     }
 
-    ResponseCookie cookie = ResponseCookie.from("loginRedirectUrl", redirectUrl)
-        .httpOnly(true)
-        .secure(true)
-        .sameSite("Lax")
-        .path("/")
-        .maxAge(Duration.ofMinutes(3))
-        .build();
-
-    response.addHeader("Set-Cookie", cookie.toString());
-    log.info("[setRedirectUrlCookie] {}", cookie);
-    response.sendRedirect("/oauth2/authorization/kakao"); // Spring Security가 처리하는 실제 경로
-  }
-
-  private boolean isAllowedRedirectUrl(String url) {
-    return url.startsWith("http://localhost:3000") || url.startsWith("https://www.wedy.co.kr");
-  }
+    private boolean isAllowedRedirectUrl(String url) {
+        return url.startsWith("http://localhost:3000") || url.startsWith("https://www.wedy.co.kr");
+    }
 }
