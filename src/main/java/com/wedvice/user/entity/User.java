@@ -179,6 +179,7 @@ public class User extends BaseTimeEntity {
         }
     }
 
+    //    좋은 메서드 !!! 필요한 재료 준비는 미리 해야한다 ( 전제조건 ->  couple엔티티를 fetch해와야 lazy-loading성능저하가 안발생한다 )
     public User getPartnerOrThrow() {
         if (this.couple == null) {
             throw new NotMatchedYetException();

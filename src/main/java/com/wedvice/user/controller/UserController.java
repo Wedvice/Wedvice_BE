@@ -6,6 +6,7 @@ import com.wedvice.common.ApiResponse;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
 import com.wedvice.user.dto.MemoRequestDto;
+import com.wedvice.user.dto.MyPageMainResponseDto;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -104,5 +105,18 @@ public class UserController {
         @RequestBody MemoRequestDto requestDto) {
         userService.updateMemo(loginUser.getUserId(), requestDto);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+
+    @Operation(
+        summary = "마이페이지 기본 정보 조회",
+        description = "로그인한 사용자의 마이페이지 기본 정보(프로필, 파트너, 설정)를 조회합니다.",
+        security = @SecurityRequirement(name = JWT)
+    )
+    @GetMapping("/myPage")
+    public ResponseEntity<ApiResponse<MyPageMainResponseDto>> getMyPageInfo(
+        @LoginUser CustomUserDetails loginUser) {
+        MyPageMainResponseDto responseDto = userService.getMyPageInfo(loginUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
 }

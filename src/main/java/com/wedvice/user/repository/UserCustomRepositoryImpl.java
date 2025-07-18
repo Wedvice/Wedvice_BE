@@ -2,6 +2,7 @@ package com.wedvice.user.repository;
 
 import static com.wedvice.couple.entity.QCouple.couple;
 import static com.wedvice.user.entity.QUser.user;
+import static com.wedvice.user.entity.QUserConfig.userConfig;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.wedvice.user.dto.QUserDto;
@@ -48,5 +49,17 @@ public class UserCustomRepositoryImpl implements UserCustomRepository {
             .from(user)
             .where(user.id.eq(userId))
             .fetchOne();
+    }
+
+    @Override
+    public Optional<User> findUserWithCoupleAndConfigById(Long userId) {
+        User result = queryFactory
+            .selectFrom(user)
+            .join(user.userConfig, userConfig).fetchJoin()
+            .join(user.couple, couple).fetchJoin()
+            .where(user.id.eq(userId))
+            .fetchOne();
+
+        return Optional.ofNullable(result);
     }
 }

@@ -31,6 +31,7 @@ public class UserConfig {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Getter
     private LocalDateTime weddingDate;
 
     @Enumerated(EnumType.STRING)
@@ -92,6 +93,8 @@ public class UserConfig {
         return userConfig;
     }
 
+
+    // 업데이트 메서드
     public void updateMyColor(Color myColor) {
         this.myColor = myColor;
     }
@@ -114,6 +117,10 @@ public class UserConfig {
 
     public void updatePushEnabled(boolean pushEnabled) {
         this.pushEnabled = pushEnabled;
+    }
+
+    public void updateWeddingDate(LocalDateTime weddingDate) {
+        this.weddingDate = weddingDate;
     }
 
     @Getter

@@ -5,6 +5,7 @@ import com.wedvice.security.login.JwtTokenProvider;
 import com.wedvice.security.login.RedirectEnum;
 import com.wedvice.security.login.RedirectResponseDto;
 import com.wedvice.user.dto.MemoRequestDto;
+import com.wedvice.user.dto.MyPageMainResponseDto;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.exception.TokenInvalidException;
@@ -178,6 +179,17 @@ public class UserService {
             throw new InvalidUserAccessException();
         }
         return user.getCouple().getId();
+    }
+
+    @Transactional(readOnly = true)
+    public MyPageMainResponseDto getMyPageInfo(Long userId) {
+        User user = userRepository.findUserWithCoupleAndConfigById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+
+        User partner = user.getPartnerOrThrow();
+
+        // MyPageMainResponseDto의 정적 팩토리 메서드를 사용하여 DTO 생성
+        return MyPageMainResponseDto.of(user, partner, user.getUserConfig());
     }
 }
 
