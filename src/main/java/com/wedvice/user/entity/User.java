@@ -1,5 +1,7 @@
 package com.wedvice.user.entity;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 import com.wedvice.common.BaseTimeEntity;
 import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.NotMatchedYetException;
@@ -8,7 +10,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -57,11 +58,11 @@ public class User extends BaseTimeEntity {
     @Column(name = "role", nullable = true)
     private Role role;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "couple_id", nullable = true)
     private Couple couple;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", fetch = LAZY)
     private UserConfig userConfig;
 
 
@@ -94,25 +95,27 @@ public class User extends BaseTimeEntity {
     }
 
     // 테스트용 정적 팩토리 메서드 (엔티티 내부 유효성 검사 우회)
-    public static User createForTest(String oauthId, String provider, String nickname, String memo) {
+    public static User createForTest(String oauthId, String provider, String nickname,
+        String memo) {
         return User.builder()
-                .oauthId(oauthId)
-                .provider(provider)
-                .nickname(nickname)
-                .memo(memo)
-                .role(Role.USER) // 기본 역할 유저
-                .build();
+            .oauthId(oauthId)
+            .provider(provider)
+            .nickname(nickname)
+            .memo(memo)
+            .role(Role.USER) // 기본 역할 유저
+            .build();
     }
 
     // 테스트용 정적 팩토리 메서드 (ID 포함)
-    public static User createForTestWithId(Long id, String oauthId, String provider, String nickname, String memo) {
+    public static User createForTestWithId(Long id, String oauthId, String provider,
+        String nickname, String memo) {
         User user = User.builder()
-                .oauthId(oauthId)
-                .provider(provider)
-                .nickname(nickname)
-                .memo(memo)
-                .role(Role.USER)
-                .build();
+            .oauthId(oauthId)
+            .provider(provider)
+            .nickname(nickname)
+            .memo(memo)
+            .role(Role.USER)
+            .build();
         user.id = id; // ID 직접 설정
         return user;
     }
@@ -146,12 +149,16 @@ public class User extends BaseTimeEntity {
         this.refreshToken = newRefreshToken;
     }
 
-    public void updateEmail(String email){
+    public void updateEmail(String email) {
         this.email = email;
     }
 
     public void updateRole(User.Role role) {
         this.role = role;
+    }
+
+    public void addUserConfig(UserConfig userConfig) {
+        this.userConfig = userConfig;
     }
 
 
