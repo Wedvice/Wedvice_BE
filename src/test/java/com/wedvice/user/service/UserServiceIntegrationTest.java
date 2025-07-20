@@ -2,9 +2,17 @@ package com.wedvice.user.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.wedvice.couple.entity.Couple;
+import com.wedvice.couple.repository.CoupleRepository;
+import com.wedvice.security.login.RedirectEnum;
+import com.wedvice.security.login.RedirectResponseDto;
 import com.wedvice.user.entity.User;
+import com.wedvice.user.entity.User.Role;
 import com.wedvice.user.repository.UserRepository;
+import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +30,9 @@ class UserServiceIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EntityManager em;
 
     @Test
     @DisplayName("saveOrGetUser: 새로운 사용자는 DB에 저장된다.")
@@ -72,4 +83,97 @@ class UserServiceIntegrationTest {
     }
 
     // * refresh (UPDATE): 기존 사용자 정보가 수정되는 흐름을 테스트. (추가하면 좋음)
+
+    @Nested
+    @DisplayName("getRedirectStatus 메서드 테스트")
+    class GetRedirectStatus {
+
+        @Autowired
+        private CoupleRepository coupleRepository;
+
+        @Test
+        @DisplayName("User가 매칭되지 않은 경우 JUST_USER 반환")
+        void unmatchedUserReturnsJustUser() {
+            // given
+            User user = User.create("oauth-id", "kakao");
+            userRepository.save(user);
+
+            // when
+            System.out.println(em.contains(user));
+            RedirectResponseDto result = userService.getRedirectStatus(user.getId());
+
+            // then
+            assertThat(result.getRedirectCode()).isEqualTo(RedirectEnum.JUST_USER.getNumber());
+        }
+
+        @Nested
+        @DisplayName("커플 쌍이 필요한 테스트")
+        class CoupleCompleted {
+
+            User user;
+            User partner;
+
+            @BeforeEach
+            void setup() {
+                // given
+                user = User.create("oauth-id", "kakao");
+                partner = User.create("oauth-id2", "kakao");
+                userRepository.save(user);
+                userRepository.save(partner);
+
+                Couple couple = Couple.create();
+                coupleRepository.save(couple);
+                user.matchCouple(couple); // 가상 커플 매칭
+                partner.matchCouple(couple);
+            }
+
+            @Test
+            @DisplayName("User가 정보 입력을 완료하지 않은 경우 Not_COMPLETED 반환")
+            void userNotCompletedReturnsNotCompleted() {
+                // when
+                RedirectResponseDto result = userService.getRedirectStatus(user.getId());
+
+                // then
+                assertThat(result.getRedirectCode()).isEqualTo(
+                    RedirectEnum.NOT_COMPLETED.getNumber());
+            }
+
+            @Test
+            @DisplayName("User만 정보 입력 완료한 경우 ONLY_COMPLETED 반환")
+            void userOnlyCompletedReturnsOnlyCompleted() {
+                // given
+                user.updateNickname("신랑");
+                user.updateRole(Role.GROOM);
+                userRepository.save(user);
+                em.flush();
+
+                // when
+                RedirectResponseDto result = userService.getRedirectStatus(user.getId());
+
+                // then
+                assertThat(result.getRedirectCode()).isEqualTo(
+                    RedirectEnum.ONLY_COMPLETED.getNumber());
+            }
+
+            @Test
+            @DisplayName("전부 입력한 경우 PAIR_COMPLETED 반환")
+            void userPairCompletedReturnsPairCompleted() {
+                // given
+                user.updateNickname("신랑");
+                user.updateRole(Role.GROOM);
+                userRepository.save(user);
+                partner.updateNickname("신부");
+                partner.updateRole(Role.BRIDE);
+                userRepository.save(partner);
+                em.flush();
+
+                // when
+                RedirectResponseDto result = userService.getRedirectStatus(user.getId());
+
+                // then
+                assertThat(result.getRedirectCode()).isEqualTo(
+                    RedirectEnum.PAIR_COMPLETED.getNumber());
+            }
+        }
+    }
 }
