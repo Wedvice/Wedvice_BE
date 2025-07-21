@@ -2,6 +2,7 @@ package com.wedvice.user.entity;
 
 import static jakarta.persistence.FetchType.LAZY;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -32,7 +33,7 @@ public class UserConfig {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToOne(fetch = LAZY, mappedBy = "userConfig")
+    @OneToOne(fetch = LAZY, mappedBy = "userConfig", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserAlarmConfig alarmConfig;
 
 
@@ -41,12 +42,15 @@ public class UserConfig {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "my_color")
+    @Getter
     private Color myColor;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "partner_color")
+    @Getter
     private Color partnerColor;
 
+    @Getter
     @Enumerated(EnumType.STRING)
     @Column(name = "our_color", updatable = false)
     private Color ourColor;
@@ -128,8 +132,13 @@ public class UserConfig {
         this.weddingDate = weddingDate;
     }
 
+    // 목적이 드러나는 정보 제공 메서드
+    public Color providePartnerColor() {
+        return this.partnerColor;
+    }
+
     @Getter
-    enum Color {
+    public enum Color {
         RED,
         YELLOW,
         GREEN,

@@ -6,7 +6,12 @@ import com.wedvice.common.ApiResponse;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
 import com.wedvice.user.dto.MemoRequestDto;
+import com.wedvice.user.dto.MyAccountResponseDto;
 import com.wedvice.user.dto.MyPageMainResponseDto;
+import com.wedvice.user.dto.PartnerImageAndColorResponseDto;
+import com.wedvice.user.dto.UpdateColorConfigRequestDto;
+import com.wedvice.user.dto.UpdateNicknameRequestDto;
+import com.wedvice.user.dto.UserColorConfigResponseDto;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,8 +22,11 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -128,7 +136,8 @@ public class UserController {
         security = @SecurityRequirement(name = JWT)
     )
     @DeleteMapping("/image")
-    public ResponseEntity<ApiResponse<Void>> deleteProfileImage(@LoginUser CustomUserDetails loginUser) {
+    public ResponseEntity<ApiResponse<Void>> deleteProfileImage(
+        @LoginUser CustomUserDetails loginUser) {
         userService.deleteProfileImage(loginUser.getUserId());
         return ResponseEntity.ok(ApiResponse.success(null));
     }
@@ -139,18 +148,23 @@ public class UserController {
         security = @SecurityRequirement(name = JWT)
     )
     @PostMapping("/image")
-    public void changeProfileImage(@LoginUser CustomUserDetails loginUser) {
-
+    public ResponseEntity<ApiResponse<Void>> changeProfileImage(
+        @LoginUser CustomUserDetails loginUser) {
+        userService.changeProfileImage(loginUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @Operation(
-        summary = "파트너 이미지 조회",
-        description = "로그인한 사용자의 설정된 파트너 사진 및 파트너 컬러 조회",
+        summary = "파트너 이미지 및 컬러 조회",
+        description = "로그인한 사용자가 설정한 파트너의 사진과 컬러를 조회합니다.",
         security = @SecurityRequirement(name = JWT)
     )
-    @GetMapping("/partnerImage")
-    public void getPartnerImage(@LoginUser CustomUserDetails loginUser) {
-
+    @GetMapping("/partnerImageAndColor")
+    public ResponseEntity<ApiResponse<PartnerImageAndColorResponseDto>> getPartnerImageAndColor(
+        @LoginUser CustomUserDetails loginUser) {
+        PartnerImageAndColorResponseDto responseDto = userService.getPartnerImageAndColor(
+            loginUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
 
     @Operation(
@@ -159,8 +173,10 @@ public class UserController {
         security = @SecurityRequirement(name = JWT)
     )
     @DeleteMapping("/partner")
-    public void deletePartner(@LoginUser CustomUserDetails loginUser) {
-
+    public ResponseEntity<ApiResponse<Void>> deletePartner(
+        @LoginUser CustomUserDetails loginUser) {
+        userService.deletePartnerConnection(loginUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @Operation(
@@ -169,8 +185,10 @@ public class UserController {
         security = @SecurityRequirement(name = JWT)
     )
     @GetMapping("/myAccount")
-    public void getMyAccountInfo(@LoginUser CustomUserDetails loginUser) {
-
+    public ResponseEntity<ApiResponse<MyAccountResponseDto>> getMyAccountInfo(
+        @LoginUser CustomUserDetails loginUser) {
+        MyAccountResponseDto responseDto = userService.getMyAccountInfo(loginUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
 
 
@@ -180,7 +198,6 @@ public class UserController {
         security = @SecurityRequirement(name = JWT)
     )
     @PostMapping("/logout")
-    public void logout(@LoginUser CustomUserDetails loginUser) {
     public ResponseEntity<ApiResponse<Void>> logout(@LoginUser CustomUserDetails loginUser) {
         userService.logout(loginUser.getUserId());
 
@@ -203,18 +220,30 @@ public class UserController {
         security = @SecurityRequirement(name = JWT)
     )
     @DeleteMapping("/myAccount")
-    public void deleteMyAccount(@LoginUser CustomUserDetails loginUser) {
-
+    public ResponseEntity<ApiResponse<Void>> deleteMyAccount(
+        @LoginUser CustomUserDetails loginUser) {
+        userService.deleteMyAccount(loginUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @Operation(
         summary = "닉네임변경 ",
         description = "자신 닉네임변경",
-        security = @SecurityRequirement(name = JWT)
+        security = @SecurityRequirement(name = JWT),
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "닉네임 변경 JSON 데이터",
+            required = true,
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = UpdateNicknameRequestDto.class)
+            )
+        )
     )
     @PatchMapping("/myAccount")
-    public void updateNickName(@LoginUser CustomUserDetails loginUser) {
-
+    public ResponseEntity<ApiResponse<Void>> updateNickName(@LoginUser CustomUserDetails loginUser,
+        @RequestBody @Valid UpdateNicknameRequestDto requestDto) {
+        userService.updateNickname(loginUser.getUserId(), requestDto);
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @Operation(
@@ -223,38 +252,32 @@ public class UserController {
         security = @SecurityRequirement(name = JWT)
     )
     @GetMapping("/colorConfig")
-    public void getColorConfig(@LoginUser CustomUserDetails loginUser) {
-
+    public ResponseEntity<ApiResponse<UserColorConfigResponseDto>> getColorConfig(
+        @LoginUser CustomUserDetails loginUser) {
+        UserColorConfigResponseDto responseDto = userService.getUserColorConfig(
+            loginUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(responseDto));
     }
 
     @Operation(
         summary = "컬러 설정 업데이트 ",
-        description = "자신과 파트너의 개인 컬러 설정 업데이트",
-        security = @SecurityRequirement(name = JWT)
+        description = "자신과 파트너의 개인 컬러 설정 업데이트 (우리 컬러는 변경 불가능함이 원칙)",
+        security = @SecurityRequirement(name = JWT),
+        requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "컬러 설정 업데이트 JSON 데이터",
+            required = true,
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = UpdateColorConfigRequestDto.class)
+            )
+        )
     )
     @PatchMapping("/colorConfig")
-    public void updateColorConfig(@LoginUser CustomUserDetails loginUser) {
-
-    }
-
-    @Operation(
-        summary = "결혼 예정일 조회 ",
-        description = "결혼 예정일 조회",
-        security = @SecurityRequirement(name = JWT)
-    )
-    @GetMapping("/weddingDate")
-    public void getWeddingDate(@LoginUser CustomUserDetails loginUser) {
-
-    }
-
-    @Operation(
-        summary = "결혼 예정일 수정 ",
-        description = "결혼 예정일 수정",
-        security = @SecurityRequirement(name = JWT)
-    )
-    @PatchMapping("/weddingDate")
-    public void updateWeddingDate(@LoginUser CustomUserDetails loginUser) {
-
+    public ResponseEntity<ApiResponse<Void>> updateColorConfig(
+        @LoginUser CustomUserDetails loginUser,
+        @RequestBody @Valid UpdateColorConfigRequestDto requestDto) {
+        userService.updateColorConfig(loginUser.getUserId(), requestDto);
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @Operation(
