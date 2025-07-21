@@ -6,6 +6,7 @@ import com.wedvice.common.BaseTimeEntity;
 import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.NotMatchedYetException;
 import com.wedvice.couple.exception.PartnerNotFoundException;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -62,7 +63,7 @@ public class User extends BaseTimeEntity {
     @JoinColumn(name = "couple_id", nullable = true)
     private Couple couple;
 
-    @OneToOne(mappedBy = "user", fetch = LAZY)
+    @OneToOne(mappedBy = "user", fetch = LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private UserConfig userConfig;
 
 
@@ -123,7 +124,9 @@ public class User extends BaseTimeEntity {
     // 연관관계 편의 메서드
     public void matchCouple(Couple couple) {
         this.couple = couple;
-        couple.getUsers().add(this);
+        if (couple != null) {
+            couple.getUsers().add(this);
+        }
     }
 
     // 업데이트 메서드
