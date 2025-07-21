@@ -5,6 +5,7 @@ import com.wedvice.couple.dto.CompleteMatchRequestDto;
 import com.wedvice.couple.dto.CoupleHomeInfoResponseDto;
 import com.wedvice.couple.dto.MatchCodeResponseDto;
 import com.wedvice.couple.dto.MatchRequestDto;
+import com.wedvice.couple.dto.UpdateWeddingDateRequestDto;
 import com.wedvice.couple.service.CoupleService;
 import com.wedvice.couple.util.MatchCodeService;
 import com.wedvice.security.login.CustomUserDetails;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -89,5 +91,17 @@ public class CoupleController {
         CoupleHomeInfoResponseDto coupleHomeInfoResponseDto = coupleService.getCoupleInfo(
             loginUser.getUserId());
         return ResponseEntity.ok(ApiResponse.success(coupleHomeInfoResponseDto));
+    }
+
+    @PatchMapping("/weddingDate")
+    @Operation(
+        summary = "결혼 예정일 수정",
+        description = "커플의 결혼 예정일을 수정합니다."
+    )
+    public ResponseEntity<ApiResponse<Void>> updateWeddingDate(
+        @LoginUser CustomUserDetails loginUser,
+        @RequestBody @Valid UpdateWeddingDateRequestDto requestDto) {
+        coupleService.updateWeddingDate(loginUser.getUserId(), requestDto.getWeddingDate());
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }
