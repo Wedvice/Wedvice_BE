@@ -173,6 +173,7 @@ public class UserController {
 
     }
 
+
     @Operation(
         summary = "로그아웃 ",
         description = "자신 로그아웃",
@@ -180,7 +181,20 @@ public class UserController {
     )
     @PostMapping("/logout")
     public void logout(@LoginUser CustomUserDetails loginUser) {
+    public ResponseEntity<ApiResponse<Void>> logout(@LoginUser CustomUserDetails loginUser) {
+        userService.logout(loginUser.getUserId());
 
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", "")
+            .path("/")
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("None")
+            .maxAge(0)
+            .build();
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+            .body(ApiResponse.success(null));
     }
 
     @Operation(
