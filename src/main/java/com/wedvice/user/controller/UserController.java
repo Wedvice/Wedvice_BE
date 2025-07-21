@@ -112,7 +112,7 @@ public class UserController {
 
     @Operation(
         summary = "마이페이지 기본 정보 조회",
-        description = "로그인한 사용자의 마이페이지 기본 정보(프로필, 파트너, 설정)를 조회합니다.",
+        description = "로그인한 사용자의 마이페이지 기본 정보(자신의 닉네임, 프로필 이미지, 파트너 닉네임 , 결혼예정일)를 조회합니다.",
         security = @SecurityRequirement(name = JWT)
     )
     @GetMapping("/myPage")
@@ -128,8 +128,9 @@ public class UserController {
         security = @SecurityRequirement(name = JWT)
     )
     @DeleteMapping("/image")
-    public void deleteProfileImage(@LoginUser CustomUserDetails loginUser) {
-
+    public ResponseEntity<ApiResponse<Void>> deleteProfileImage(@LoginUser CustomUserDetails loginUser) {
+        userService.deleteProfileImage(loginUser.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     @Operation(
@@ -177,7 +178,7 @@ public class UserController {
         description = "자신 로그아웃",
         security = @SecurityRequirement(name = JWT)
     )
-    @GetMapping("/myAccount")
+    @PostMapping("/logout")
     public void logout(@LoginUser CustomUserDetails loginUser) {
 
     }
@@ -204,7 +205,7 @@ public class UserController {
 
     @Operation(
         summary = "컬러 설정조회 ",
-        description = "자신과파트너 우리 개인이 설정한 컬러 설정 조회",
+        description = "자신과 파트너 우리 개인이 설정한 컬러 설정 조회",
         security = @SecurityRequirement(name = JWT)
     )
     @GetMapping("/colorConfig")
@@ -217,7 +218,7 @@ public class UserController {
         description = "자신과 파트너의 개인 컬러 설정 업데이트",
         security = @SecurityRequirement(name = JWT)
     )
-    @GetMapping("/colorConfig")
+    @PatchMapping("/colorConfig")
     public void updateColorConfig(@LoginUser CustomUserDetails loginUser) {
 
     }
@@ -247,7 +248,7 @@ public class UserController {
         description = "알림 설정 조회",
         security = @SecurityRequirement(name = JWT)
     )
-    @PatchMapping("/weddingDate")
+    @PatchMapping("/alarmConfig")
     public void getAlarmConfig(@LoginUser CustomUserDetails loginUser) {
 
     }
