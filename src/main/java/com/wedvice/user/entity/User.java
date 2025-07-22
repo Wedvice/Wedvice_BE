@@ -4,6 +4,7 @@ import com.wedvice.common.BaseTimeEntity;
 import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.NotMatchedYetException;
 import com.wedvice.couple.exception.PartnerNotFoundException;
+import com.wedvice.user.entity.UserConfig.Color;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -68,7 +69,6 @@ public class User extends BaseTimeEntity {
     /**
      * 메서드 시작
      */
-
     // private 생성자 (빌더 패턴용)
     @Builder(access = AccessLevel.PRIVATE)
     private User(String oauthId, String provider, String nickname, String profileImageUrl,
@@ -94,25 +94,27 @@ public class User extends BaseTimeEntity {
     }
 
     // 테스트용 정적 팩토리 메서드 (엔티티 내부 유효성 검사 우회)
-    public static User createForTest(String oauthId, String provider, String nickname, String memo) {
+    public static User createForTest(String oauthId, String provider, String nickname,
+        String memo) {
         return User.builder()
-                .oauthId(oauthId)
-                .provider(provider)
-                .nickname(nickname)
-                .memo(memo)
-                .role(Role.USER) // 기본 역할 유저
-                .build();
+            .oauthId(oauthId)
+            .provider(provider)
+            .nickname(nickname)
+            .memo(memo)
+            .role(Role.USER) // 기본 역할 유저
+            .build();
     }
 
     // 테스트용 정적 팩토리 메서드 (ID 포함)
-    public static User createForTestWithId(Long id, String oauthId, String provider, String nickname, String memo) {
+    public static User createForTestWithId(Long id, String oauthId, String provider,
+        String nickname, String memo) {
         User user = User.builder()
-                .oauthId(oauthId)
-                .provider(provider)
-                .nickname(nickname)
-                .memo(memo)
-                .role(Role.USER)
-                .build();
+            .oauthId(oauthId)
+            .provider(provider)
+            .nickname(nickname)
+            .memo(memo)
+            .role(Role.USER)
+            .build();
         user.id = id; // ID 직접 설정
         return user;
     }
@@ -146,7 +148,7 @@ public class User extends BaseTimeEntity {
         this.refreshToken = newRefreshToken;
     }
 
-    public void updateEmail(String email){
+    public void updateEmail(String email) {
         this.email = email;
     }
 
@@ -181,6 +183,18 @@ public class User extends BaseTimeEntity {
             .filter(u -> !u.getId().equals(this.id))
             .findFirst()
             .orElseThrow(PartnerNotFoundException::new);
+    }
+
+    public Color provideThatColor(User.Role role) {
+        if (userConfig == null) {
+            return Color.NOT_IMPLEMENT;
+        }
+        if (this.role == role) {
+            return userConfig.getMyColor();
+        } else if (role == Role.TOGETHER) {
+            return userConfig.getOurColor();
+        }
+        return userConfig.getYourColor();
     }
 
     @Getter

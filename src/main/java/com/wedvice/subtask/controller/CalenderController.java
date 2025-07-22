@@ -11,7 +11,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +34,7 @@ public class CalenderController {
         description = "연도와 월을 기준으로 커플의 서브테스크 요약 정보를 반환합니다."
     )
     @GetMapping("/summary/{year}/{month}")
-    public ResponseEntity<ApiResponse<List<CalenderSummaryResponseDto>>> getCalenderSummary(
+    public ResponseEntity<ApiResponse<CalenderSummaryResponseDto>> getCalenderSummary(
         @LoginUser CustomUserDetails loginUser,
 
         @PathVariable
@@ -48,7 +47,7 @@ public class CalenderController {
         @Min(1) @Max(12)
         int month
     ) {
-        List<CalenderSummaryResponseDto> dto = calenderService.makeSummary(loginUser.getUserId(),
+        CalenderSummaryResponseDto dto = calenderService.makeSummary(loginUser.getUserId(),
             year, month);
         return ResponseEntity.ok(ApiResponse.success(dto));
     }

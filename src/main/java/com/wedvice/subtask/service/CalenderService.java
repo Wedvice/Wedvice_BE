@@ -19,19 +19,12 @@ public class CalenderService {
     private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
-    public List<CalenderSummaryResponseDto> makeSummary(Long userId, int year, int month) {
+    public CalenderSummaryResponseDto makeSummary(Long userId, int year, int month) {
         User user = userRepository.findByUserWithCoupleAndPartner(userId)
             .orElseThrow(InvalidUserAccessException::new);
         Long coupleId = user.getCouple().getId();
         List<SubTask> subTaskList = subTaskRepository.getSubTasksByDate(coupleId, year, month);
-        return subTaskList.stream().map(
-            subTask ->
-                CalenderSummaryResponseDto.builder().targetDate(subTask.getTargetDate())
-                    .id(subTask.getId())
-                    .role(String.valueOf(subTask.getRole()))
-                    .content(subTask.getContent())
-                    .title(subTask.getCoupleTask().getTask().getTitle())
-                    .build()
-        ).toList();
+
+        return CalenderSummaryResponseDto.of(user, subTaskList);
     }
 }

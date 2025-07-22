@@ -1,26 +1,39 @@
 package com.wedvice.subtask.dto;
 
+import com.wedvice.subtask.entity.SubTask;
+import com.wedvice.user.entity.User;
+import com.wedvice.user.entity.User.Role;
+import com.wedvice.user.entity.UserConfig.Color;
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.time.LocalDate;
+import java.util.List;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 
-@Builder
+@Builder(access = AccessLevel.PRIVATE)
 @Getter
 public class CalenderSummaryResponseDto {
 
-    @Schema(description = "목표일", example = "2024-12-20")
-    private LocalDate targetDate;
+    @Schema(description = "역할 신부의 색깔")
+    private Color groomColor;
 
-    @Schema(description = "할일", example = "정장 업체 선정 및 예약")
-    private String content;
+    @Schema(description = "역할 신랑의 색깔")
+    private Color brideColor;
 
-    @Schema(description = "카테고리 정보", example = "드레스/정장")
-    private String title;
+    @Schema(description = "역할 함께의 색깔")
+    private Color togetherColor;
+    private List<SubTaskSummaryDto> subTaskSummaryDto;
 
-    @Schema(description = "역할", example = "GROOM")
-    private String role;
+    public static CalenderSummaryResponseDto of(User user, List<SubTask> subTaskList) {
+        List<SubTaskSummaryDto> summaries = subTaskList.stream()
+            .map(SubTaskSummaryDto::of)
+            .toList();
 
-    @Schema(description = "서브테스크 id", example = "1")
-    private Long id;
+        return CalenderSummaryResponseDto.builder()
+            .groomColor(user.provideThatColor(Role.GROOM))
+            .brideColor(user.provideThatColor(Role.BRIDE))
+            .togetherColor(user.provideThatColor(Role.TOGETHER))
+            .subTaskSummaryDto(summaries)
+            .build();
+    }
 }
