@@ -23,11 +23,11 @@ public class SwaggerConfig {
                 .license(new License().name("Apache 2.0").url("http://springdoc.org")))
             .servers(List.of(
                 new Server()
-                    .url("https://wedy.co.kr")
-                    .description("배포용 서버"),
-                new Server()
                     .url("http://localhost:8080")
-                    .description("개발용 서버")
+                    .description("개발용 서버"),
+                new Server()
+                    .url("https://wedy.co.kr")
+                    .description("배포용 서버")
             ));
     }
 }
