@@ -11,7 +11,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.NotMatchedYetException;
 import com.wedvice.couple.exception.PartnerNotFoundException;
+import com.wedvice.user.common.UserTestFixture;
 import com.wedvice.user.entity.User.Role;
+import com.wedvice.user.entity.UserConfig.Color;
+import com.wedvice.user.exception.InvalidRoleForWeddingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -429,6 +432,85 @@ class UserTest {
             user.updateRole(null); // 명시적
 
             assertThat(user.isInfoCompleted()).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("provideThatColor 메서드 테스트")
+    class ProvideThatColor {
+
+        User user;
+
+        @BeforeEach
+        void setup() {
+            user = UserTestFixture.createUserWithUniqueOauthId();
+        }
+
+        @Test
+        @DisplayName("wedding롤이 아니면 config가 없더라도 InvalidRoleForWeddingException 에러를")
+        void throwInvalidRoleForWeddingExceptionIfNotWeddingRole() {
+            //then
+            assertThrows(InvalidRoleForWeddingException.class,
+                () -> user.provideThatColor(Role.USER));
+            assertThrows(InvalidRoleForWeddingException.class,
+                () -> user.provideThatColor(Role.ADMIN));
+        }
+
+        @Test
+        @DisplayName("config가 구현되어 있지 않으면 NOT_IMPLEMENT를 반환한다")
+        void returnNOT_IMPLEMENTIfConfigIsNull() {
+            // then
+            assertThat(user.provideThatColor(Role.GROOM)).isEqualTo(Color.NOT_IMPLEMENT);
+            assertThat(user.provideThatColor(Role.BRIDE)).isEqualTo(Color.NOT_IMPLEMENT);
+            assertThat(user.provideThatColor(Role.TOGETHER)).isEqualTo(Color.NOT_IMPLEMENT);
+        }
+
+        @Nested
+        @DisplayName("userConfig가 구현되었을 시")
+        class withConfig {
+
+            UserConfig uc;
+
+            @BeforeEach
+            void setup() {
+                uc = UserConfig.builder()
+                    .myColor(Color.RED)
+                    .yourColor(Color.BLUE)
+                    .ourColor(Color.GREEN)
+                    .build();
+
+                user.updateRole(Role.GROOM);
+                // 연관관계 양방향 설정
+                user.assignUserConfig(uc);
+            }
+
+            @Test
+            @DisplayName("wedding롤이 아니면 config가 있더라도 InvalidRoleForWeddingException 에러를")
+            void throwInvalidRoleForWeddingExceptionIfNotWeddingRole() {
+                //then
+                assertThrows(InvalidRoleForWeddingException.class,
+                    () -> user.provideThatColor(Role.USER));
+                assertThrows(InvalidRoleForWeddingException.class,
+                    () -> user.provideThatColor(Role.ADMIN));
+            }
+
+            @Test
+            @DisplayName("자신의 역할이면 myColor를 반환한다")
+            void returnMyColorIfRoleMatches() {
+                assertThat(user.provideThatColor(Role.GROOM)).isEqualTo(Color.RED);
+            }
+
+            @Test
+            @DisplayName("상대 역할이면 yourColor를 반환한다")
+            void returnYourColorIfRoleIsOpposite() {
+                assertThat(user.provideThatColor(Role.BRIDE)).isEqualTo(Color.BLUE);
+            }
+
+            @Test
+            @DisplayName("TOGETHER 역할이면 ourColor를 반환한다")
+            void returnOurColorIfRoleIsTogether() {
+                assertThat(user.provideThatColor(Role.TOGETHER)).isEqualTo(Color.GREEN);
+            }
         }
     }
 }
