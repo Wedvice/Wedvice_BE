@@ -105,6 +105,7 @@ public class SubTaskCustomRepositoryImpl implements SubTaskCustomRepository {
 
         return queryFactory.selectFrom(subTask)
             .join(subTask.coupleTask, coupleTask).fetchJoin()
+            .join(coupleTask.task, task).fetchJoin()
             .where(
                 subTask.coupleTask.couple.id.eq(coupleId),
                 subTask.targetDate.isNotNull(),
