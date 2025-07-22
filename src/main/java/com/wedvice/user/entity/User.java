@@ -5,6 +5,8 @@ import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.NotMatchedYetException;
 import com.wedvice.couple.exception.PartnerNotFoundException;
 import com.wedvice.user.entity.UserConfig.Color;
+import com.wedvice.user.exception.InvalidRoleForWeddingException;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -62,7 +64,7 @@ public class User extends BaseTimeEntity {
     @JoinColumn(name = "couple_id", nullable = true)
     private Couple couple;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private UserConfig userConfig;
 
 
@@ -123,6 +125,11 @@ public class User extends BaseTimeEntity {
     public void matchCouple(Couple couple) {
         this.couple = couple;
         couple.getUsers().add(this);
+    }
+
+    public void assignUserConfig(UserConfig config) {
+        this.userConfig = config;
+        config.setUser(this);
     }
 
     // 업데이트 메서드
@@ -186,6 +193,10 @@ public class User extends BaseTimeEntity {
     }
 
     public Color provideThatColor(User.Role role) {
+        if (!role.isMarriageRole()) {
+            throw new InvalidRoleForWeddingException();
+        }
+
         if (userConfig == null) {
             return Color.NOT_IMPLEMENT;
         }
@@ -210,6 +221,10 @@ public class User extends BaseTimeEntity {
 
         Role(String message) {
             this.message = message;
+        }
+
+        public boolean isMarriageRole() {
+            return this == GROOM || this == BRIDE || this == TOGETHER;
         }
     }
 }
