@@ -28,11 +28,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -302,6 +304,14 @@ public class UserService {
         if (requestDto.getPartnerColor() != null) {
             userConfig.updatePartnerColor(requestDto.getPartnerColor());
         }
+    }
+
+    @Transactional
+    public void updateRefreshTokenForFilter(Long userId, String refreshToken) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+        log.info("[UserService::updateRefreshTokenForFilter] refreshToken 갱신 : {}", refreshToken);
+        user.updateRefreshToken(refreshToken); // ← 도메인 메
     }
 }
 

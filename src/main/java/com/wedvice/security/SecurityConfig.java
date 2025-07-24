@@ -93,7 +93,6 @@ public class SecurityConfig {
 
                         // ✅ DB에 사용자 정보 저장 (이미 있으면 무시)
                         User user = userService.saveOrGetUser(oauthId, provider, profileImageUrl);
-
                         // ✅ JWT 생성
                         String accessToken = jwtTokenProvider.generateAccessToken(
                             user.getId().toString(),
@@ -101,7 +100,7 @@ public class SecurityConfig {
                         String refreshToken = jwtTokenProvider.generateRefreshToken(
                             user.getId().toString(),
                             user.getNickname(), user.getOauthId());
-                        user.updateRefreshToken(refreshToken);
+                        userService.updateRefreshTokenForFilter(user.getId(), refreshToken);
 
                         // ✅ 리다이렉션 URL 쿠키에서 추출
                         String redirectUrl = "https://www.wedy.co.kr"; // fallback

@@ -13,4 +13,6 @@ public interface SubTaskCustomRepository {
     List<SubTask> findHomeSubTasksByCondition(HomeSubTaskConditionDto homeSubTaskConditionDto);
 
     CompleteRateResponseDto getProgressRate(Long userId, Role filterRole);
+
+    List<SubTask> getSubTasksByDate(Long coupleId, int year, int month);
 }

@@ -33,4 +33,10 @@ public class UserTestFixture {
         user.updateNickname(nickName);
         return user;
     }
+
+    public static User createWithRoleAndNickNameInjectId(User.Role role, String nickName, Long id) {
+        User withRoleAndNickName = createWithRoleAndNickName(role, nickName);
+        ReflectionTestUtils.setField(withRoleAndNickName, "id", id);
+        return withRoleAndNickName;
+    }
 }

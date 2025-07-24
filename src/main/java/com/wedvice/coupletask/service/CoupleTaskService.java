@@ -1,5 +1,8 @@
 package com.wedvice.coupletask.service;
 
+import com.wedvice.couple.entity.Couple;
+import com.wedvice.couple.repository.CoupleRepository;
+import com.wedvice.coupletask.dto.CoupleTaskResponseDto;
 import com.wedvice.coupletask.dto.CoupleTaskWithSubTaskInfo;
 import com.wedvice.coupletask.entity.CoupleTask;
 import com.wedvice.coupletask.repository.CoupleTaskRepository;
@@ -18,6 +21,9 @@ public class CoupleTaskService {
 
     private final CoupleTaskRepository coupleTaskRepository;
 
+    private final CoupleRepository coupleRepository;
+
+
     @Transactional(readOnly = true)
     public List<CoupleTaskWithSubTaskInfo> getCoupleTasksWithSubTaskInfo(Long coupleId) {
         List<SubTask> subTasks = coupleTaskRepository.findSubTasksForCoupleTaskInfo(coupleId);
@@ -32,7 +38,8 @@ public class CoupleTaskService {
 
     @Transactional
     public void softDeleteCoupleTasks(List<Long> taskIds, Long coupleId) {
-        List<CoupleTask> coupleTasksToDelete = coupleTaskRepository.findByTaskIdsAndCoupleId(taskIds, coupleId);
+        List<CoupleTask> coupleTasksToDelete = coupleTaskRepository.findByTaskIdsAndCoupleId(
+            taskIds, coupleId);
 
         if (coupleTasksToDelete.size() != taskIds.size()) {
             throw new RuntimeException("Some tasks not found or permission denied.");
@@ -44,5 +51,13 @@ public class CoupleTaskService {
     @Transactional(readOnly = true)
     public List<CoupleTask> findByCoupleIdWithTask(final Long coupleId) {
         return coupleTaskRepository.findByCoupleIdWithTask(coupleId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CoupleTaskResponseDto> getCoupleTasks(Long userId) {
+        Couple couple = coupleRepository.findCoupleByUserId(userId);
+        return coupleTaskRepository.findCoupleTaskWithTaskByCoupleId(couple.getId())
+            .stream().map(CoupleTaskResponseDto::from)
+            .toList();
     }
 }

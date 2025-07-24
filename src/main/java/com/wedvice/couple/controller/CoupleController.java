@@ -1,11 +1,14 @@
 package com.wedvice.couple.controller;
 
 import com.wedvice.common.ApiResponse;
+import com.wedvice.common.swagger.DocumentedApiError;
 import com.wedvice.couple.dto.CompleteMatchRequestDto;
 import com.wedvice.couple.dto.CoupleHomeInfoResponseDto;
 import com.wedvice.couple.dto.MatchCodeResponseDto;
 import com.wedvice.couple.dto.MatchRequestDto;
 import com.wedvice.couple.dto.UpdateWeddingDateRequestDto;
+import com.wedvice.couple.exception.InvalidUserAccessException;
+import com.wedvice.couple.exception.UserNotFoundException;
 import com.wedvice.couple.service.CoupleService;
 import com.wedvice.couple.util.MatchCodeService;
 import com.wedvice.security.login.CustomUserDetails;
@@ -60,6 +63,9 @@ public class CoupleController {
     }
 
     @PostMapping("/match")
+    @Operation(summary = "커플 매칭", description = "상대방의 매치 코드를 받고, 커플 연결을 시도한다.")
+    @DocumentedApiError(InvalidUserAccessException.class)
+    @DocumentedApiError(UserNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> match(@Validated @RequestBody MatchRequestDto request,
         @LoginUser CustomUserDetails loginUser) {
         long userId = loginUser.getUserId();

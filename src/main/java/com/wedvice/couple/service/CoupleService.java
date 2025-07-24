@@ -41,7 +41,6 @@ public class CoupleService {
     public void matchCouple(long userId, String matchCode) {
         long pid = matchCodeService
             .getCodeUserId(matchCode)
-
             .orElseThrow(() -> new MatchCodeExpiredException(matchCode));
 
         User user = userRepository.findById(userId)

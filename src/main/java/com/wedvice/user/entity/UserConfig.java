@@ -137,6 +137,10 @@ public class UserConfig {
         return this.partnerColor;
     }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     @Getter
     public enum Color {
         RED,
@@ -146,7 +150,7 @@ public class UserConfig {
         PURPLE,
         RIGHT_DARK,
         PINK,
-
+        NOT_IMPLEMENT
     }
 
 }

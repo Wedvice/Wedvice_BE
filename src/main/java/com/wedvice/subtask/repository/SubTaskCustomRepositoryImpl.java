@@ -12,6 +12,7 @@ import com.wedvice.subtask.dto.HomeSubTaskConditionDto;
 import com.wedvice.subtask.entity.SubTask;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.entity.User.Role;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -95,6 +96,22 @@ public class SubTaskCustomRepositoryImpl implements SubTaskCustomRepository {
         int percent = (int) Math.round((completed * 100.0) / total);
 
         return new CompleteRateResponseDto(percent, completed, total);
+    }
+
+    @Override
+    public List<SubTask> getSubTasksByDate(Long coupleId, int year, int month) {
+        LocalDate start = LocalDate.of(year, month, 1);
+        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
+
+        return queryFactory.selectFrom(subTask)
+            .join(subTask.coupleTask, coupleTask).fetchJoin()
+            .join(coupleTask.task, task).fetchJoin()
+            .where(
+                subTask.coupleTask.couple.id.eq(coupleId),
+                subTask.targetDate.isNotNull(),
+                subTask.targetDate.between(start, end))
+            .orderBy(subTask.targetDate.asc(), subTask.id.asc())
+            .fetch();
     }
 
     private OrderSpecifier<?>[] getOrderSpecifiers(String sortType, boolean top3) {

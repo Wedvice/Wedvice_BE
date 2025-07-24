@@ -6,6 +6,8 @@ import com.wedvice.common.BaseTimeEntity;
 import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.NotMatchedYetException;
 import com.wedvice.couple.exception.PartnerNotFoundException;
+import com.wedvice.user.entity.UserConfig.Color;
+import com.wedvice.user.exception.InvalidRoleForWeddingException;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -129,6 +131,11 @@ public class User extends BaseTimeEntity {
         }
     }
 
+    public void assignUserConfig(UserConfig config) {
+        this.userConfig = config;
+        config.setUser(this);
+    }
+
     // 업데이트 메서드
     public void updateNickname(String nickname) {
         if (nickname == null || nickname.trim().isEmpty() || nickname.length() > 2) {
@@ -182,7 +189,6 @@ public class User extends BaseTimeEntity {
         }
     }
 
-    //    좋은 메서드 !!! 필요한 재료 준비는 미리 해야한다 ( 전제조건 ->  couple엔티티를 fetch해와야 lazy-loading성능저하가 안발생한다 )
     public User getPartnerOrThrow() {
         if (this.couple == null) {
             throw new NotMatchedYetException();
@@ -192,6 +198,22 @@ public class User extends BaseTimeEntity {
             .filter(u -> !u.getId().equals(this.id))
             .findFirst()
             .orElseThrow(PartnerNotFoundException::new);
+    }
+
+    public Color provideThatColor(User.Role role) {
+        if (!role.isMarriageRole()) {
+            throw new InvalidRoleForWeddingException();
+        }
+
+        if (userConfig == null) {
+            return Color.NOT_IMPLEMENT;
+        }
+        if (this.role == role) {
+            return userConfig.getMyColor();
+        } else if (role == Role.TOGETHER) {
+            return userConfig.getOurColor();
+        }
+        return userConfig.getPartnerColor();
     }
 
     @Getter
@@ -207,6 +229,10 @@ public class User extends BaseTimeEntity {
 
         Role(String message) {
             this.message = message;
+        }
+
+        public boolean isMarriageRole() {
+            return this == GROOM || this == BRIDE || this == TOGETHER;
         }
     }
 }
