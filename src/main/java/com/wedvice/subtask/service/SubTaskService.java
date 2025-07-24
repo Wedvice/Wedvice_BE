@@ -7,6 +7,7 @@ import com.wedvice.subtask.dto.CreateSubTaskRequestDTO;
 import com.wedvice.subtask.dto.HomeSubTaskConditionDto;
 import com.wedvice.subtask.dto.SubTaskHomeResponseDto;
 import com.wedvice.subtask.dto.SubTaskResponseDTO;
+import com.wedvice.subtask.entity.SubTask;
 import com.wedvice.subtask.exception.NotExistRoleException;
 import com.wedvice.subtask.repository.SubTaskRepository;
 import com.wedvice.user.entity.User;
@@ -17,35 +18,39 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.wedvice.subtask.entity.SubTask;
-import org.springframework.security.access.AccessDeniedException;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class SubTaskService {
 
-  private final SubTaskRepository subTaskRepository;
-  private final UserRepository userRepository;
-  private final CoupleTaskRepository coupleTaskRepository;
+    private final SubTaskRepository subTaskRepository;
+    private final UserRepository userRepository;
+    private final CoupleTaskRepository coupleTaskRepository;
 
 
-  public List<SubTaskResponseDTO> getAllSubTask(Long userId, Long taskId) {
+    public List<SubTaskResponseDTO> getAllSubTask(Long userId, Long taskId) {
 
-    User user = userRepository.findById(userId).orElseThrow();
+        User user = userRepository.findById(userId).orElseThrow();
 
-    Long coupleId = user.getCouple().getId();
+        Long coupleId = user.getCouple().getId();
 
-    if (coupleId == null) return List.of();
+        if (coupleId == null) {
+            return List.of();
+        }
 
-    return subTaskRepository.getSubTasks(userId, taskId, coupleId).stream()
-        .map(subTask ->
-            new SubTaskResponseDTO(
-        subTask.getCoupleTask().getId(),subTask.getId(),subTask.getDisplayName(),subTask.getCompleted(),subTask.getRole().toString(),subTask.getPrice(),subTask.getTargetDate(),subTask.getCompletedDate(),subTask.getContent(),subTask.getOrders()))
-        .collect(Collectors.toList());
-  }
+        return subTaskRepository.getSubTasks(userId, taskId, coupleId).stream()
+            .map(subTask ->
+                new SubTaskResponseDTO(
+                    subTask.getCoupleTask().getId(), subTask.getId(), subTask.getDisplayName(),
+                    subTask.getCompleted(), subTask.getRole().toString(), subTask.getPrice(),
+                    subTask.getTargetDate(), subTask.getCompletedDate(), subTask.getContent(),
+                    subTask.getOrders()))
+            .collect(Collectors.toList());
+    }
 
 
     @Transactional(readOnly = true)
@@ -99,87 +104,95 @@ public class SubTaskService {
     }
 
 
-  // SubTask 삭제 (soft delete)
-  public void deleteSubTask(Long userId, Long subTaskId) {
-      SubTask subTask = subTaskRepository.findById(subTaskId)
-              .orElseThrow(() -> new IllegalArgumentException("SubTask not found with id: " + subTaskId));
+    // SubTask 삭제 (soft delete)
+    public void deleteSubTask(Long userId, Long subTaskId) {
+        SubTask subTask = subTaskRepository.findById(subTaskId)
+            .orElseThrow(
+                () -> new IllegalArgumentException("SubTask not found with id: " + subTaskId));
 
-      User user = userRepository.findById(userId)
-              .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
 
-      // SubTask의 CoupleTask와 User의 Couple이 동일한지 확인
-      if (!subTask.getCoupleTask().getCouple().getId().equals(user.getCouple().getId())) {
-          throw new AccessDeniedException("You do not have permission to delete this SubTask.");
-      }
+        // SubTask의 CoupleTask와 User의 Couple이 동일한지 확인
+        if (!subTask.getCoupleTask().getCouple().getId().equals(user.getCouple().getId())) {
+            throw new AccessDeniedException("You do not have permission to delete this SubTask.");
+        }
 
-      subTask.updateDeleteStatus();
-  }
+        subTask.updateDeleteStatus();
+    }
 
-  // SubTask 완료 상태 변경
-  public void updateSubTaskCompletedStatus(Long userId, Long subTaskId) {
-      SubTask subTask = subTaskRepository.findById(subTaskId)
-              .orElseThrow(() -> new IllegalArgumentException("SubTask not found with id: " + subTaskId));
+    // SubTask 완료 상태 변경
+    public void updateSubTaskCompletedStatus(Long userId, Long subTaskId) {
+        SubTask subTask = subTaskRepository.findById(subTaskId)
+            .orElseThrow(
+                () -> new IllegalArgumentException("SubTask not found with id: " + subTaskId));
 
-      User user = userRepository.findById(userId)
-              .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
 
-      // SubTask의 CoupleTask와 User의 Couple이 동일한지 확인
-      if (!subTask.getCoupleTask().getCouple().getId().equals(user.getCouple().getId())) {
-          throw new AccessDeniedException("You do not have permission to update this SubTask's completed status.");
-      }
+        // SubTask의 CoupleTask와 User의 Couple이 동일한지 확인
+        if (!subTask.getCoupleTask().getCouple().getId().equals(user.getCouple().getId())) {
+            throw new AccessDeniedException(
+                "You do not have permission to update this SubTask's completed status.");
+        }
 
-      subTask.updateCompleteStatus();
-  }
+        subTask.updateCompleteStatus();
+    }
 
-  // SubTask 정렬 순서 변경
-  @Transactional
-  public void updateSubTaskOrders(Long userId, List<Long> subTaskIds) {
-      User user = userRepository.findById(userId)
-              .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+    // SubTask 정렬 순서 변경
+    @Transactional
+    public void updateSubTaskOrders(Long userId, List<Long> subTaskIds) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
 
-      Long userCoupleId = user.getCouple().getId();
+        Long userCoupleId = user.getCouple().getId();
 
-      for (int i = 0; i < subTaskIds.size(); i++) {
-          Long subTaskId = subTaskIds.get(i);
-          SubTask subTask = subTaskRepository.findById(subTaskId)
-                  .orElseThrow(() -> new IllegalArgumentException("SubTask not found with id: " + subTaskId));
+        for (int i = 0; i < subTaskIds.size(); i++) {
+            Long subTaskId = subTaskIds.get(i);
+            SubTask subTask = subTaskRepository.findById(subTaskId)
+                .orElseThrow(
+                    () -> new IllegalArgumentException("SubTask not found with id: " + subTaskId));
 
-          // 권한 확인: SubTask가 사용자의 커플에 속하는지 확인
-          if (!subTask.getCoupleTask().getCouple().getId().equals(userCoupleId)) {
-              throw new AccessDeniedException("You do not have permission to align this SubTask.");
-          }
+            // 권한 확인: SubTask가 사용자의 커플에 속하는지 확인
+            if (!subTask.getCoupleTask().getCouple().getId().equals(userCoupleId)) {
+                throw new AccessDeniedException(
+                    "You do not have permission to align this SubTask.");
+            }
 
-          // orders 값 업데이트
-          subTask.updateOrders(i);
-      }
-  }
+            // orders 값 업데이트
+            subTask.updateOrders(i);
+        }
+    }
 
-  // SubTask 생성
-  public SubTask createSubTask(Long userId, CreateSubTaskRequestDTO requestDTO) {
-      User user = userRepository.findById(userId)
-              .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
+    // SubTask 생성
+    public SubTask createSubTask(Long userId, CreateSubTaskRequestDTO requestDTO) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userId));
 
-      CoupleTask coupleTask = coupleTaskRepository.findById(requestDTO.getCoupleTaskId())
-              .orElseThrow(() -> new IllegalArgumentException("CoupleTask not found with id: " + requestDTO.getCoupleTaskId()));
+        CoupleTask coupleTask = coupleTaskRepository.findById(requestDTO.getCoupleTaskId())
+            .orElseThrow(() -> new IllegalArgumentException(
+                "CoupleTask not found with id: " + requestDTO.getCoupleTaskId()));
 
-      // 권한 확인: CoupleTask가 현재 로그인한 사용자의 커플에 속하는지 확인
-      if (!coupleTask.getCouple().getId().equals(user.getCouple().getId())) {
-          throw new AccessDeniedException("You do not have permission to create a SubTask for this CoupleTask.");
-      }
+        // 권한 확인: CoupleTask가 현재 로그인한 사용자의 커플에 속하는지 확인
+        if (!coupleTask.getCouple().getId().equals(user.getCouple().getId())) {
+            throw new AccessDeniedException(
+                "You do not have permission to create a SubTask for this CoupleTask.");
+        }
 
-      // SubTask.create 팩토리 메서드를 사용하여 SubTask 엔티티 생성
-      SubTask newSubTask = SubTask.create(
-              coupleTask,
-              requestDTO.getTitle(),
-              0,
-              requestDTO.getLocalDate(),
-              requestDTO.getRole(),
-              0,
-              requestDTO.getDescription()
-      );
+        // SubTask.create 팩토리 메서드를 사용하여 SubTask 엔티티 생성
+        SubTask newSubTask = SubTask.create(
+            coupleTask,
+            requestDTO.getTitle(),
+            0,
+            requestDTO.getLocalDate(),
+            requestDTO.getRole(),
+            0,
+            requestDTO.getDescription()
+        );
 
-      return subTaskRepository.save(newSubTask);
-  }
+        return subTaskRepository.save(newSubTask);
+    }
+
     @Transactional(readOnly = true)
     public CompleteRateResponseDto getProgressRate(Long userId, String role) {
         Long coupleId = userRepository.findCoupleIdByUserId(userId);

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 public class TaskResponseDTO {
 
     private Long taskId;
-    String taskTitle;
-    Long totalCount;
-    Integer completedCount;
+    private String taskTitle;
+    private Long totalCount;
+    private Integer completedCount;
 }
