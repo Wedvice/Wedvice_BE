@@ -6,6 +6,8 @@ import com.wedvice.coupletask.dto.CoupleTaskResponseDto;
 import com.wedvice.coupletask.dto.CoupleTaskWithSubTaskInfo;
 import com.wedvice.coupletask.repository.CoupleTaskRepository;
 import com.wedvice.subtask.entity.SubTask;
+import java.util.List;
+import java.util.stream.Collectors;
 import com.wedvice.subtask.service.SubTaskService;
 import com.wedvice.task.service.TaskService;
 import java.util.List;
@@ -39,6 +41,22 @@ public class CoupleTaskService {
                 subTask.getPrice()
             ))
             .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void softDeleteCoupleTasks(List<Long> taskIds, Long coupleId) {
+        List<CoupleTask> coupleTasksToDelete = coupleTaskRepository.findByTaskIdsAndCoupleId(taskIds, coupleId);
+
+        if (coupleTasksToDelete.size() != taskIds.size()) {
+            throw new RuntimeException("Some tasks not found or permission denied.");
+        }
+
+        coupleTasksToDelete.forEach(CoupleTask::updateDeleteStatus);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CoupleTask> findByCoupleIdWithTask(final Long coupleId) {
+        return coupleTaskRepository.findByCoupleIdWithTask(coupleId);
     }
 
     @Transactional(readOnly = true)

@@ -6,6 +6,7 @@ import com.wedvice.couple.dto.CompleteMatchRequestDto;
 import com.wedvice.couple.dto.CoupleHomeInfoResponseDto;
 import com.wedvice.couple.dto.MatchCodeResponseDto;
 import com.wedvice.couple.dto.MatchRequestDto;
+import com.wedvice.couple.dto.UpdateWeddingDateRequestDto;
 import com.wedvice.couple.exception.InvalidUserAccessException;
 import com.wedvice.couple.exception.UserNotFoundException;
 import com.wedvice.couple.service.CoupleService;
@@ -21,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,9 +42,17 @@ public class CoupleController {
     //    api response 통일 안된거 체크.
     @GetMapping("/match-code")
     @Operation(summary = "매치코드 발급",
-        description = "해당 유저의 매치코드가 존재하면 기존 코드를 반환하고, 없으면 새로 생성하여 반환합니다.")
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200",
-        description = "성공")
+        description = "해당 유저의 매치코드가 존재하면 기존 코드를 반환하고, 없으면 새로 생성하여 반환합니다.",
+        responses = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                responseCode = "200",
+                description = "매치코드 발급 성공",
+                content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = MatchCodeResponseDto.class)
+                )
+            )
+        })
     public ResponseEntity<ApiResponse<MatchCodeResponseDto>> getMatchCode(
         @LoginUser CustomUserDetails loginUser) {
         var responseDto = MatchCodeResponseDto.builder()
@@ -85,5 +95,17 @@ public class CoupleController {
         CoupleHomeInfoResponseDto coupleHomeInfoResponseDto = coupleService.getCoupleInfo(
             loginUser.getUserId());
         return ResponseEntity.ok(ApiResponse.success(coupleHomeInfoResponseDto));
+    }
+
+    @PatchMapping("/weddingDate")
+    @Operation(
+        summary = "결혼 예정일 수정",
+        description = "커플의 결혼 예정일을 수정합니다."
+    )
+    public ResponseEntity<ApiResponse<Void>> updateWeddingDate(
+        @LoginUser CustomUserDetails loginUser,
+        @RequestBody @Valid UpdateWeddingDateRequestDto requestDto) {
+        coupleService.updateWeddingDate(loginUser.getUserId(), requestDto.getWeddingDate());
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

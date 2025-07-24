@@ -1,5 +1,7 @@
 package com.wedvice.user.entity;
 
+import static jakarta.persistence.FetchType.LAZY;
+
 import com.wedvice.common.BaseTimeEntity;
 import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.NotMatchedYetException;
@@ -7,11 +9,11 @@ import com.wedvice.couple.exception.PartnerNotFoundException;
 import com.wedvice.user.entity.UserConfig.Color;
 import com.wedvice.user.exception.InvalidRoleForWeddingException;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -60,17 +62,18 @@ public class User extends BaseTimeEntity {
     @Column(name = "role", nullable = true)
     private Role role;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "couple_id", nullable = true)
     private Couple couple;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", fetch = LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private UserConfig userConfig;
 
 
     /**
      * 메서드 시작
      */
+
     // private 생성자 (빌더 패턴용)
     @Builder(access = AccessLevel.PRIVATE)
     private User(String oauthId, String provider, String nickname, String profileImageUrl,
@@ -124,7 +127,9 @@ public class User extends BaseTimeEntity {
     // 연관관계 편의 메서드
     public void matchCouple(Couple couple) {
         this.couple = couple;
-        couple.getUsers().add(this);
+        if (couple != null) {
+            couple.getUsers().add(this);
+        }
     }
 
     public void assignUserConfig(UserConfig config) {
@@ -161,6 +166,10 @@ public class User extends BaseTimeEntity {
 
     public void updateRole(User.Role role) {
         this.role = role;
+    }
+
+    public void addUserConfig(UserConfig userConfig) {
+        this.userConfig = userConfig;
     }
 
 

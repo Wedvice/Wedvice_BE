@@ -12,4 +12,6 @@ public interface UserCustomRepository {
     Optional<User> findByUserWithCoupleAndPartner(Long userId);
 
     Long findCoupleIdByUserId(Long userId);
+
+    Optional<User> findUserWithCoupleAndConfigById(Long userId);
 }

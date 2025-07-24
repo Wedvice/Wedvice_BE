@@ -1,15 +1,12 @@
 package com.wedvice.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wedvice.security.login.ExceptionHandlingFilter;
 import com.wedvice.security.login.JwtAuthenticationFilter;
 import com.wedvice.security.login.JwtTokenProvider;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.service.UserService;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -194,19 +191,6 @@ public class SecurityConfig {
 
                         response.sendRedirect(redirectUrl);
                     })
-            )
-            .logout(logout -> logout
-                .logoutUrl("/auth/logout")
-                .logoutSuccessHandler((request, response, authentication) -> {
-                    response.setStatus(HttpServletResponse.SC_OK);
-                    response.setContentType("application/json");
-                    response.setCharacterEncoding("UTF-8");
-                    Map<String, Object> result = new HashMap<>();
-                    result.put("message", "로그아웃 성공");
-                    result.put("isLoggedIn", false);
-                    new ObjectMapper().writeValue(response.getWriter(), result);
-                })
-
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
