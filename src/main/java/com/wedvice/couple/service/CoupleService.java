@@ -20,6 +20,7 @@ import com.wedvice.task.service.TaskService;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.entity.User.Role;
 import com.wedvice.user.repository.UserRepository;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -117,5 +118,18 @@ public class CoupleService {
             .brideDto(UserDto.of(bride, userId))
             .weddingDate(couple.getWeddingDate())
             .build();
+    }
+
+    @Transactional
+    public void updateWeddingDate(Long userId, LocalDate newWeddingDate) {
+        User user = userRepository.findByUserWithCoupleAndPartner(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+
+        if (!user.isMatched()) {
+            throw new NotMatchedYetException();
+        }
+
+        Couple couple = user.getCouple();
+        couple.updateWeddingDate(newWeddingDate);
     }
 }

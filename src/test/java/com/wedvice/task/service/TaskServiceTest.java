@@ -1,13 +1,29 @@
 package com.wedvice.task.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.wedvice.couple.entity.Couple;
+import com.wedvice.couple.exception.InvalidUserAccessException;
 import com.wedvice.coupletask.entity.CoupleTask;
-import com.wedvice.coupletask.repository.CoupleTaskRepository;
+import com.wedvice.coupletask.service.CoupleTaskService;
 import com.wedvice.security.login.CustomUserDetails;
-import com.wedvice.task.dto.TaskResponseDTO;
 import com.wedvice.subtask.entity.SubTask;
+import com.wedvice.task.dto.TaskResponseDTO;
 import com.wedvice.user.entity.User;
-import com.wedvice.user.repository.UserRepository;
+import com.wedvice.user.service.UserService;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,47 +33,38 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
+
+    private static final Long TEST_USER_ID = 1L;
+    private static final Long TEST_COUPLE_ID = 1L;
+
 
     @Mock
-    private CoupleTaskRepository coupleTaskRepository;
-
+    private UserService userService;
+    @Mock
+    private CoupleTaskService coupleTaskService;
     @InjectMocks
     private TaskService taskService;
-
     private CustomUserDetails customUserDetails;
     private User testUser;
     private Couple testCouple;
 
     @BeforeEach
     void setUp() {
-        // Couple 객체 Mocking
+        // Couple 객체 Mocking (ID는 상수로 대체)
         testCouple = mock(Couple.class);
-        lenient().when(testCouple.getId()).thenReturn(1L);
 
-        // User 객체 Mocking
+        // User 객체 Mocking (ID는 상수로 대체)
         testUser = mock(User.class);
-        lenient().when(testUser.getId()).thenReturn(1L);
-        lenient().when(testUser.getCouple()).thenReturn(testCouple);
 
         // CustomUserDetails 생성자 수정
-        customUserDetails = new CustomUserDetails(testUser.getId(), "test@example.com", Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+        customUserDetails = new CustomUserDetails(TEST_USER_ID, "test@example.com",
+            Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
 
-        lenient().when(userRepository.findById(testUser.getId())).thenReturn(Optional.of(testUser));
+        lenient().when(userService.getCoupleIdForUser(TEST_USER_ID))
+            .thenReturn(TEST_COUPLE_ID);
     }
 
     @Test
@@ -66,20 +73,12 @@ class TaskServiceTest {
         // Given
         List<Long> taskIds = Arrays.asList(10L, 11L);
 
-        CoupleTask coupleTask1 = mock(CoupleTask.class);
-        CoupleTask coupleTask2 = mock(CoupleTask.class);
-
-        when(coupleTaskRepository.findByTaskIdAndCoupleId(10L, testCouple.getId())).thenReturn(Optional.of(coupleTask1));
-        when(coupleTaskRepository.findByTaskIdAndCoupleId(11L, testCouple.getId())).thenReturn(Optional.of(coupleTask2));
-
         // When
         taskService.deleteTasks(taskIds, customUserDetails);
 
         // Then
-        verify(coupleTaskRepository, times(1)).findByTaskIdAndCoupleId(10L, testCouple.getId());
-        verify(coupleTaskRepository, times(1)).findByTaskIdAndCoupleId(11L, testCouple.getId());
-        verify(coupleTask1, times(1)).updateDeleteStatus();
-        verify(coupleTask2, times(1)).updateDeleteStatus();
+        verify(userService, times(1)).getCoupleIdForUser(TEST_USER_ID);
+        verify(coupleTaskService, times(1)).softDeleteCoupleTasks(taskIds, TEST_COUPLE_ID);
     }
 
     @Test
@@ -88,36 +87,22 @@ class TaskServiceTest {
         // Given
         List<Long> taskIds = Arrays.asList(10L, 11L);
 
-        CoupleTask coupleTask1 = mock(CoupleTask.class);
-
-        when(coupleTaskRepository.findByTaskIdAndCoupleId(10L, testCouple.getId())).thenReturn(Optional.of(coupleTask1));
-        when(coupleTaskRepository.findByTaskIdAndCoupleId(11L, testCouple.getId())).thenReturn(Optional.empty()); // 11L은 찾을 수 없음
+        // When coupleTaskService throws an exception for softDeleteCoupleTasks
+        doThrow(new RuntimeException("Some tasks not found or permission denied."))
+            .when(coupleTaskService).softDeleteCoupleTasks(taskIds, TEST_COUPLE_ID);
 
         // When & Then
         assertThatThrownBy(() -> taskService.deleteTasks(taskIds, customUserDetails))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("Task not found or permission denied");
+            .isInstanceOf(RuntimeException.class)
+            .hasMessageContaining("Some tasks not found or permission denied.");
 
-        verify(coupleTaskRepository, times(1)).findByTaskIdAndCoupleId(10L, testCouple.getId());
-        verify(coupleTaskRepository, times(1)).findByTaskIdAndCoupleId(11L, testCouple.getId());
-        verify(coupleTask1, times(1)).updateDeleteStatus(); // 10L에 대한 updateDeleteStatus는 호출되어야 함
+        verify(userService, times(1)).getCoupleIdForUser(TEST_USER_ID);
+        verify(coupleTaskService, times(1)).softDeleteCoupleTasks(taskIds, TEST_COUPLE_ID);
     }
 
-    @Test
-    @DisplayName("빈 Task ID 리스트가 주어져도 오류 없이 처리해야 한다")
-    void shouldHandleEmptyTaskList() {
-        // Given
-        List<Long> taskIds = Collections.emptyList();
-
-        // When
-        taskService.deleteTasks(taskIds, customUserDetails);
-
-        // Then
-        verify(coupleTaskRepository, never()).findByTaskIdAndCoupleId(any(), any()); // 어떤 쿼리도 호출되지 않아야 함
-    }
 
     @Test
-    @DisplayName("findAllTaskAndSubTask: 올바른 TaskResponseDTO 리스트를 반환해야 한다")
+    @DisplayName("findAllCoupleTaskAndSubTask: 올바른 TaskResponseDTO 리스트를 반환해야 한다")
     void shouldReturnCorrectTaskResponseDTOs() {
         // Given
         com.wedvice.task.entity.Task mockTask1 = mock(com.wedvice.task.entity.Task.class);
@@ -131,7 +116,8 @@ class TaskServiceTest {
         CoupleTask coupleTask1 = mock(CoupleTask.class);
         when(coupleTask1.getTask()).thenReturn(mockTask1);
         // SubTask mocking for coupleTask1
-        List<SubTask> subTasks1 = Arrays.asList(mock(SubTask.class), mock(SubTask.class), mock(SubTask.class));
+        List<SubTask> subTasks1 = Arrays.asList(mock(SubTask.class), mock(SubTask.class),
+            mock(SubTask.class));
         when(subTasks1.get(0).getCompleted()).thenReturn(true);
         when(subTasks1.get(1).getCompleted()).thenReturn(false);
         when(subTasks1.get(2).getCompleted()).thenReturn(true);
@@ -145,10 +131,11 @@ class TaskServiceTest {
         when(coupleTask2.getSubTasks()).thenReturn(subTasks2);
 
         List<CoupleTask> mockCoupleTasks = Arrays.asList(coupleTask1, coupleTask2);
-        when(coupleTaskRepository.findByCoupleIdWithTask(testCouple.getId())).thenReturn(mockCoupleTasks);
+        when(coupleTaskService.findByCoupleIdWithTask(TEST_COUPLE_ID)).thenReturn(
+            mockCoupleTasks);
 
         // When
-        List<TaskResponseDTO> result = taskService.findAllTaskAndSubTask(customUserDetails);
+        List<TaskResponseDTO> result = taskService.findAllCoupleTaskAndSubTask(customUserDetails);
 
         // Then
         assertThat(result).hasSize(2);
@@ -167,39 +154,41 @@ class TaskServiceTest {
             assertThat(dto.getCompletedCount()).isEqualTo(0);
         });
 
-        verify(userRepository, times(1)).findById(testUser.getId());
-        verify(coupleTaskRepository, times(1)).findByCoupleIdWithTask(testCouple.getId());
+        verify(userService, times(1)).getCoupleIdForUser(TEST_USER_ID);
+        verify(coupleTaskService, times(1)).findByCoupleIdWithTask(TEST_COUPLE_ID);
     }
 
     @Test
-    @DisplayName("findAllTaskAndSubTask: CoupleTask가 없을 때 빈 리스트를 반환해야 한다")
+    @DisplayName("findAllCoupleTaskAndSubTask: CoupleTask가 없을 때 빈 리스트를 반환해야 한다")
     void shouldReturnEmptyListWhenNoCoupleTasks() {
         // Given
-        when(coupleTaskRepository.findByCoupleIdWithTask(testCouple.getId())).thenReturn(Collections.emptyList());
+        when(coupleTaskService.findByCoupleIdWithTask(TEST_COUPLE_ID)).thenReturn(
+            Collections.emptyList());
 
         // When
-        List<TaskResponseDTO> result = taskService.findAllTaskAndSubTask(customUserDetails);
+        List<TaskResponseDTO> result = taskService.findAllCoupleTaskAndSubTask(customUserDetails);
 
         // Then
         assertThat(result).isNotNull().isEmpty();
 
-        verify(userRepository, times(1)).findById(testUser.getId());
-        verify(coupleTaskRepository, times(1)).findByCoupleIdWithTask(testCouple.getId());
+        verify(userService, times(1)).getCoupleIdForUser(TEST_USER_ID);
+        verify(coupleTaskService, times(1)).findByCoupleIdWithTask(TEST_COUPLE_ID);
     }
 
     @Test
-    @DisplayName("findAllTaskAndSubTask: 사용자를 찾을 수 없을 때 예외를 발생시켜야 한다")
+    @DisplayName("findAllCoupleTaskAndSubTask: 사용자를 찾을 수 없을 때 예외를 발생시켜야 한다")
     void shouldThrowExceptionWhenUserNotFound() {
         // Given
-        when(userRepository.findById(testUser.getId())).thenReturn(Optional.empty());
+        when(userService.getCoupleIdForUser(TEST_USER_ID)).thenThrow(
+            new InvalidUserAccessException()); // UserService에서 던지는 예외
 
         // When & Then
-        assertThatExceptionOfType(NoSuchElementException.class).isThrownBy(() ->
-                taskService.findAllTaskAndSubTask(customUserDetails)
+        assertThatExceptionOfType(InvalidUserAccessException.class).isThrownBy(() ->
+            taskService.findAllCoupleTaskAndSubTask(customUserDetails)
         );
 
-        verify(userRepository, times(1)).findById(testUser.getId());
-        verify(coupleTaskRepository, never()).findByCoupleIdWithTask(any()); // coupleTaskRepository는 호출되지 않아야 함
+        verify(userService, times(1)).getCoupleIdForUser(TEST_USER_ID);
+        verify(coupleTaskService, never()).findByCoupleIdWithTask(any());
     }
 }
 

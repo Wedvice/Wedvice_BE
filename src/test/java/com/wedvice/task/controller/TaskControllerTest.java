@@ -101,8 +101,8 @@ class TaskControllerTest {
 
     @Test
     @WithMockUser(username = "testuser", roles = "USER")
-    @DisplayName("유효하지 않은 입력(빈 리스트)에 대해 성공적으로 처리해야 한다")
-    void shouldHandleEmptyInputSuccessfully() throws Exception {
+    @DisplayName("유효하지 않은 입력(빈 리스트)에 대해 Bad Request를 반환해야 한다")
+    void shouldReturnBadRequestForEmptyList() throws Exception {
         // Given
         DeleteTasksRequestDto requestDto = new DeleteTasksRequestDto();
         requestDto.setTaskIds(Collections.emptyList());
@@ -112,10 +112,10 @@ class TaskControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestDto)))
-                .andExpect(status().isOk());
+                .andExpect(status().isBadRequest());
 
-        // Verify that the service is still called with an empty list
-        verify(taskService, times(1)).deleteTasks(eq(Collections.emptyList()), any(CustomUserDetails.class));
+        // Verify that the service is never called
+        verify(taskService, never()).deleteTasks(any(), any(CustomUserDetails.class));
     }
 
     @Test
