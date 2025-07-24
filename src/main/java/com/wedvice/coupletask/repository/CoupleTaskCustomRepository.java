@@ -6,7 +6,8 @@ import java.util.List;
 
 public interface CoupleTaskCustomRepository {
 
-  List<SubTask> findSubTasksForCoupleTaskInfo(Long coupleId);
+    List<SubTask> findSubTasksForCoupleTaskInfo(Long coupleId);
 
 
+    List<CoupleTask> findCoupleTaskWithTaskByCoupleId(Long id);
 }
