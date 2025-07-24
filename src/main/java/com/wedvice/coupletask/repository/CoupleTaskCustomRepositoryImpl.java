@@ -1,9 +1,9 @@
 package com.wedvice.coupletask.repository;
 
+import static com.wedvice.couple.entity.QCouple.couple;
 import static com.wedvice.coupletask.entity.QCoupleTask.coupleTask;
 import static com.wedvice.subtask.entity.QSubTask.subTask;
 import static com.wedvice.task.entity.QTask.task;
-import static com.wedvice.couple.entity.QCouple.couple;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.wedvice.coupletask.entity.CoupleTask;

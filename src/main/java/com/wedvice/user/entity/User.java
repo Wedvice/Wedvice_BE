@@ -9,7 +9,6 @@ import com.wedvice.couple.exception.PartnerNotFoundException;
 import com.wedvice.user.entity.UserConfig.Color;
 import com.wedvice.user.exception.InvalidRoleForWeddingException;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -214,7 +213,7 @@ public class User extends BaseTimeEntity {
         } else if (role == Role.TOGETHER) {
             return userConfig.getOurColor();
         }
-        return userConfig.getYourColor();
+        return userConfig.getPartnerColor();
     }
 
     @Getter
