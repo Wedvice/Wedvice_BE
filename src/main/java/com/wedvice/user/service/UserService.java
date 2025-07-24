@@ -1,17 +1,27 @@
 package com.wedvice.user.service;
 
+import com.wedvice.couple.entity.Couple;
 import com.wedvice.couple.exception.InvalidUserAccessException;
+import com.wedvice.couple.exception.NotMatchedYetException;
 import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.security.login.JwtTokenProvider;
 import com.wedvice.security.login.RedirectEnum;
 import com.wedvice.security.login.RedirectResponseDto;
 import com.wedvice.user.dto.MemoRequestDto;
+import com.wedvice.user.dto.MyAccountResponseDto;
+import com.wedvice.user.dto.MyPageMainResponseDto;
+import com.wedvice.user.dto.PartnerImageAndColorResponseDto;
+import com.wedvice.user.dto.UpdateColorConfigRequestDto;
+import com.wedvice.user.dto.UpdateNicknameRequestDto;
+import com.wedvice.user.dto.UserColorConfigResponseDto;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.entity.User;
+import com.wedvice.user.entity.UserConfig;
 import com.wedvice.user.exception.TokenInvalidException;
 import com.wedvice.user.exception.TokenMismatchException;
 import com.wedvice.user.exception.TokenNotFoundException;
 import com.wedvice.user.exception.UnknownTokenException;
+import com.wedvice.user.repository.UserConfigRepository;
 import com.wedvice.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import java.util.HashMap;
@@ -25,10 +35,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
+    private final CoupleRepository coupleRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserConfigRepository userConfigRepository;
 
     @Transactional
     public User saveOrGetUser(String oauthId, String provider, String profileImageUrl) {
@@ -75,7 +88,8 @@ public class UserService {
 
             return createTokenResult(newAccessToken, newRefreshToken);
         } catch (RuntimeException e) {
-            if (e instanceof TokenMismatchException || e instanceof TokenNotFoundException || e instanceof TokenInvalidException) {
+            if (e instanceof TokenMismatchException || e instanceof TokenNotFoundException
+                || e instanceof TokenInvalidException) {
                 throw e;
             }
             e.printStackTrace();
@@ -166,6 +180,128 @@ public class UserService {
             .orElseThrow(InvalidUserAccessException::new);
 
         user.updateMemo(requestDto.getMemo());
+    }
+
+    @Transactional(readOnly = true)
+    public Long getCoupleIdForUser(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+
+        if (user.getCouple() == null) {
+            throw new InvalidUserAccessException();
+        }
+        return user.getCouple().getId();
+    }
+
+    @Transactional(readOnly = true)
+    public MyPageMainResponseDto getMyPageInfo(Long userId) {
+        User user = userRepository.findUserWithCoupleAndConfigById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+
+        User partner = user.getPartnerOrThrow();
+
+        // MyPageMainResponseDto의 정적 팩토리 메서드를 사용하여 DTO 생성
+        return MyPageMainResponseDto.of(user, partner, user.getUserConfig());
+    }
+
+    @Transactional
+    public void deleteProfileImage(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+        user.updateProfileImage(null);
+    }
+
+    @Transactional
+    public void changeProfileImage(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+        user.updateProfileImage("updated");
+    }
+
+    @Transactional(readOnly = true)
+    public PartnerImageAndColorResponseDto getPartnerImageAndColor(Long userId) {
+        User user = userRepository.findUserWithCoupleAndConfigById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+
+        User partner = user.getPartnerOrThrow();
+
+        return PartnerImageAndColorResponseDto.of(partner, user.getUserConfig());
+    }
+
+    @Transactional
+    public void deletePartnerConnection(Long userId) {
+        User user = userRepository.findByUserWithCoupleAndPartner(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+
+        if (!user.isMatched()) {
+            throw new NotMatchedYetException();
+        }
+
+        Couple couple = user.getCouple();
+
+        // 양쪽 사용자의 couple 참조를 null로 설정 (JPA가 update 쿼리 생성)
+        couple.getUsers().forEach(u -> u.matchCouple(null));
+
+        // Couple 엔티티 삭제
+        coupleRepository.delete(couple);
+    }
+
+    @Transactional(readOnly = true)
+    public MyAccountResponseDto getMyAccountInfo(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+        return MyAccountResponseDto.of(user);
+    }
+
+    @Transactional
+    public void updateNickname(Long userId, UpdateNicknameRequestDto requestDto) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+        user.updateNickname(requestDto.getNewNickname());
+    }
+
+    @Transactional
+    public void deleteMyAccount(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+
+        // 사용자가 커플인 경우, 커플 관계 해체 (Couple 엔티티 삭제)
+        if (user.isMatched()) {
+            Couple couple = user.getCouple();
+            // 양쪽 사용자의 couple 참조를 null로 설정 (JPA가 update 쿼리 생성)
+            couple.getUsers().forEach(u -> u.matchCouple(null));
+            coupleRepository.delete(couple);
+        }
+
+        // 사용자 엔티티 삭제 (UserConfig, UserAlarmConfig는 cascade에 의해 함께 삭제됨)
+        userRepository.delete(user);
+    }
+
+    @Transactional
+    public void logout(Long userId) {
+        User user = userRepository.findById(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+        user.updateRefreshToken(null);
+    }
+
+    @Transactional(readOnly = true)
+    public UserColorConfigResponseDto getUserColorConfig(Long userId) {
+        UserConfig userConfig = userConfigRepository.findByUser_Id(userId)
+            .orElseThrow(InvalidUserAccessException::new); // UserConfig가 없으면 예외 처리
+        return UserColorConfigResponseDto.of(userConfig);
+    }
+
+    @Transactional
+    public void updateColorConfig(Long userId, UpdateColorConfigRequestDto requestDto) {
+        UserConfig userConfig = userConfigRepository.findByUser_Id(userId)
+            .orElseThrow(InvalidUserAccessException::new);
+
+        if (requestDto.getMyColor() != null) {
+            userConfig.updateMyColor(requestDto.getMyColor());
+        }
+        if (requestDto.getPartnerColor() != null) {
+            userConfig.updatePartnerColor(requestDto.getPartnerColor());
+        }
     }
 }
 

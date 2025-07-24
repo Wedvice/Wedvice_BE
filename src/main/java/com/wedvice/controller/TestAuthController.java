@@ -20,15 +20,16 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "테스트를 위한 API", description = "테스트유저 토큰 발급 및 기타 사용")
 public class TestAuthController {
 
-  private final JwtTokenProvider jwtTokenProvider;
+    private final JwtTokenProvider jwtTokenProvider;
 
-  @GetMapping("/token/{id}")
-  public ResponseEntity<ApiResponse<TestTokenResponseDto>> getTestToken(
-      @Parameter(name = "id", description = "-1 or -2", required = true) @PathVariable("id") String id) {
+    @GetMapping("/token/{id}")
+    public ResponseEntity<ApiResponse<TestTokenResponseDto>> getTestToken(
+        @Parameter(name = "id", description = "-1 or -2", required = true) @PathVariable("id") String id) {
 
-    return ResponseEntity.ok(
-        ApiResponse.success(
-            new TestTokenResponseDto(jwtTokenProvider.generateTestAccessToken(id, "test", "test"),
-                jwtTokenProvider.generateTestRefreshToken(id, "test", "test"))));
-  }
+        return ResponseEntity.ok(
+            ApiResponse.success(
+                new TestTokenResponseDto(
+                    jwtTokenProvider.generateTestAccessToken(id, "test", "test"),
+                    jwtTokenProvider.generateTestRefreshToken(id, "test", "test"))));
+    }
 }

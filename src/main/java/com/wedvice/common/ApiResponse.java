@@ -1,7 +1,11 @@
 package com.wedvice.common;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -10,11 +14,12 @@ import lombok.*;
 @NoArgsConstructor
 @Schema(description = "공통 응답 포멧")
 public class ApiResponse<T> {
+
     @Schema(description = "응답 코드", example = "200")
     private int code;
     @Schema(description = "응답 코드 설명", example = "성공")
     private String message;
-    @Schema(description = "데이터 스키마", example = "Json형식의 DTO")
+    @Schema(description = "데이터 스키마")
     private T data;
 
     public static <T> ApiResponse<T> success(T data) {

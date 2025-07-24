@@ -31,7 +31,7 @@ public class Couple extends BaseTimeEntity {
     @Column(name = "wedding_date", nullable = true)  // 결혼 날짜 nullable
     private LocalDate weddingDate;
 
-    @OneToMany(mappedBy = "couple", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "couple")
     @BatchSize(size = 100) // 1:N 최적화
     private List<User> users;
 
