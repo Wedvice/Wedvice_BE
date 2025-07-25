@@ -8,6 +8,8 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.wedvice.user.dto.QUserDto;
 import com.wedvice.user.dto.UserDto;
 import com.wedvice.user.entity.User;
+import com.wedvice.user.entity.User.Role;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -61,5 +63,14 @@ public class UserCustomRepositoryImpl implements UserCustomRepository {
             .fetchOne();
 
         return Optional.ofNullable(result);
+    }
+
+    @Override
+    public List<User> findAllByIsTestTrueAndCoupleIsNullAndCreatedAtBefore(LocalDateTime cutoff) {
+        return queryFactory.selectFrom(user)
+            .where(user.role.eq(Role.TEST),
+                user.couple.isNull(),
+                user.createdAt.before(cutoff))
+            .fetch();
     }
 }

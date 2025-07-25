@@ -21,6 +21,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -98,6 +99,17 @@ public class User extends BaseTimeEntity {
     }
 
     // 테스트용 정적 팩토리 메서드 (엔티티 내부 유효성 검사 우회)
+    public static User createTestUser() {
+        String uniqueId = "test_" + System.currentTimeMillis() + "_" +
+            UUID.randomUUID().toString().substring(0, 8);
+
+        return User.builder()
+            .oauthId(uniqueId)
+            .provider("TEST")
+            .role(Role.TEST) // 기본 역할 유저 -> 매칭안된상태
+            .build();
+    }
+
     public static User createForTest(String oauthId, String provider, String nickname,
         String memo) {
         return User.builder()
@@ -223,7 +235,8 @@ public class User extends BaseTimeEntity {
         BRIDE("신부"),
         USER("매칭안된 유저"),
         ADMIN("관리자"),
-        TOGETHER("함께");
+        TOGETHER("함께"),
+        TEST("매칭이 안된 테스트 유저");
 
         private final String message;
 
