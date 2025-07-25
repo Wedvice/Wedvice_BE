@@ -45,6 +45,11 @@ public class CoupleService {
 
         User user = userRepository.findById(userId)
             .orElseThrow(InvalidUserAccessException::new);
+
+        if (user.isMatched()) {
+            throw new AlreadyMatchedException();
+        }
+        
         User partnerUser = userRepository.findById(pid)
             .orElseThrow(UserNotFoundException::new);
 
