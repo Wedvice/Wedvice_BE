@@ -36,6 +36,8 @@ public class Comment extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    private boolean deleted;
+
     // 정적 팩토리 메서드
     public static Comment create(User user, SubTask subTask, String content) {
         return Comment.builder()
@@ -47,5 +49,14 @@ public class Comment extends BaseEntity {
 
     public String getUserNickname() {
         return user.getNickname();
+    }
+
+    //업데이트 메서드
+    public void updateComment(String content) {
+        this.content = content;
+    }
+
+    public void updateDeleteStatus() {
+        this.deleted = true;
     }
 }

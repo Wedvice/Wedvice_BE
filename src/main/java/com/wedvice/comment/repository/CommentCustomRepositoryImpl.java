@@ -17,7 +17,8 @@ public class CommentCustomRepositoryImpl implements CommentCustomRepository {
     public List<Comment> findAllBySubtaskId(Long subtaskId) {
         return queryFactory.selectFrom(comment)
             .join(comment.subTask, subTask)
-            .where(subTask.id.eq(subtaskId))
+            .where(subTask.id.eq(subtaskId),
+                comment.deleted.eq(false))
             .fetch();
     }
 }
