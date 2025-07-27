@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -77,7 +78,7 @@ public class CommentController {
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    @PatchMapping
+    @DeleteMapping
     @Operation(summary = "댓글 삭제",
         description = "comment id로 댓글을 삭제합니다.")
     @DocumentedApiError(InvalidUserAccessException.class)
