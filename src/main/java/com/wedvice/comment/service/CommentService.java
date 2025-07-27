@@ -29,6 +29,7 @@ public class CommentService {
     private final UserRepository userRepository;
     private final SubTaskRepository subTaskRepository;
 
+    @Transactional(readOnly = true)
     public CommentResponseDto getAllComment(Long userId, Long subtaskId) {
         User user = userRepository.findByUserWithCoupleAndPartner(userId)
             .orElseThrow(InvalidUserAccessException::new);
@@ -46,6 +47,10 @@ public class CommentService {
     }
 
     public void postComment(Long userId, CommentPostRequestDto commentPostRequestDto) {
-
+        User user = userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
+        SubTask subTask = subTaskRepository.findById(commentPostRequestDto.getSubTaskId())
+            .orElseThrow(SubTaskNotFoundException::new);
+        Comment comment = Comment.create(user, subTask, commentPostRequestDto.getContent());
+        commentRepository.save(comment);
     }
 }

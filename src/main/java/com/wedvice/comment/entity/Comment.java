@@ -37,8 +37,10 @@ public class Comment extends BaseEntity {
     private User user;
 
     // 정적 팩토리 메서드
-    public static Comment create(String content) {
+    public static Comment create(User user, SubTask subTask, String content) {
         return Comment.builder()
+            .user(user)
+            .subTask(subTask)
             .content(content)
             .build();
     }

@@ -52,6 +52,10 @@ public class CommentController {
     }
 
     @PostMapping
+    @Operation(summary = "댓글 생성",
+        description = "서브테스크 id와 content로 댓글을 생성합니다.")
+    @DocumentedApiError(InvalidUserAccessException.class)
+    @DocumentedApiError(SubTaskNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> postComment(@LoginUser CustomUserDetails loginUser,
         @RequestBody CommentPostRequestDto commentPostRequestDto) {
         commentService.postComment(loginUser.getUserId(), commentPostRequestDto);
