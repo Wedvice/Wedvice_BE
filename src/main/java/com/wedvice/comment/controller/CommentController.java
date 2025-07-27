@@ -1,9 +1,11 @@
 package com.wedvice.comment.controller;
 
 
+import com.wedvice.comment.dto.CommentDeleteRequestDto;
 import com.wedvice.comment.dto.CommentPatchRequestDto;
 import com.wedvice.comment.dto.CommentPostRequestDto;
 import com.wedvice.comment.dto.CommentResponseDto;
+import com.wedvice.comment.exception.CommentNotFoundException;
 import com.wedvice.comment.service.CommentService;
 import com.wedvice.common.ApiResponse;
 import com.wedvice.common.swagger.DocumentedApiError;
@@ -68,6 +70,7 @@ public class CommentController {
     @Operation(summary = "댓글 수정",
         description = "comment id와 content로 댓글을 수정합니다.")
     @DocumentedApiError(InvalidUserAccessException.class)
+    @DocumentedApiError(CommentNotFoundException.class)
     public ResponseEntity<ApiResponse<?>> updateComment(@LoginUser CustomUserDetails loginUser,
         @RequestBody CommentPatchRequestDto commentPostRequestDto) {
         commentService.updateComment(loginUser.getUserId(), commentPostRequestDto);
@@ -75,7 +78,13 @@ public class CommentController {
     }
 
     @PatchMapping
-    public ResponseEntity<ApiResponse<?>> deleteComment(@LoginUser CustomUserDetails loginUser) {
+    @Operation(summary = "댓글 삭제",
+        description = "comment id로 댓글을 삭제합니다.")
+    @DocumentedApiError(InvalidUserAccessException.class)
+    @DocumentedApiError(CommentNotFoundException.class)
+    public ResponseEntity<ApiResponse<?>> deleteComment(@LoginUser CustomUserDetails loginUser,
+        @RequestBody CommentDeleteRequestDto commentDeleteRequestDto) {
+        commentService.deleteComment(loginUser.getUserId(), commentDeleteRequestDto);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 }

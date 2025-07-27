@@ -3,10 +3,12 @@ package com.wedvice.comment.service;
 import static com.wedvice.user.entity.User.Role.BRIDE;
 import static com.wedvice.user.entity.User.Role.GROOM;
 
+import com.wedvice.comment.dto.CommentDeleteRequestDto;
 import com.wedvice.comment.dto.CommentPatchRequestDto;
 import com.wedvice.comment.dto.CommentPostRequestDto;
 import com.wedvice.comment.dto.CommentResponseDto;
 import com.wedvice.comment.entity.Comment;
+import com.wedvice.comment.exception.CommentNotFoundException;
 import com.wedvice.comment.repository.CommentRepository;
 import com.wedvice.couple.exception.InvalidUserAccessException;
 import com.wedvice.couple.repository.CoupleRepository;
@@ -56,7 +58,18 @@ public class CommentService {
     }
 
     public void updateComment(Long userId, CommentPatchRequestDto commentPostRequestDto) {
-        User user = userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
+        userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
+        Comment comment = commentRepository.findById(commentPostRequestDto.getCommentId())
+            .orElseThrow(CommentNotFoundException::new);
 
+        comment.updateComment(commentPostRequestDto.getContent());
+    }
+
+    public void deleteComment(Long userId, CommentDeleteRequestDto commentDeleteRequestDto) {
+        userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
+        Comment comment = commentRepository.findById(commentDeleteRequestDto.getCommentId())
+            .orElseThrow(CommentNotFoundException::new);
+
+        comment.updateDeleteStatus();
     }
 }
