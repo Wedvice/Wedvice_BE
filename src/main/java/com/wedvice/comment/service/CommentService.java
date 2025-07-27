@@ -3,7 +3,7 @@ package com.wedvice.comment.service;
 import static com.wedvice.user.entity.User.Role.BRIDE;
 import static com.wedvice.user.entity.User.Role.GROOM;
 
-import com.wedvice.comment.SubTaskNotFoundException;
+import com.wedvice.comment.dto.CommentPatchRequestDto;
 import com.wedvice.comment.dto.CommentPostRequestDto;
 import com.wedvice.comment.dto.CommentResponseDto;
 import com.wedvice.comment.entity.Comment;
@@ -11,6 +11,7 @@ import com.wedvice.comment.repository.CommentRepository;
 import com.wedvice.couple.exception.InvalidUserAccessException;
 import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.subtask.entity.SubTask;
+import com.wedvice.subtask.exception.SubTaskNotFoundException;
 import com.wedvice.subtask.repository.SubTaskRepository;
 import com.wedvice.user.entity.User;
 import com.wedvice.user.repository.UserRepository;
@@ -52,5 +53,10 @@ public class CommentService {
             .orElseThrow(SubTaskNotFoundException::new);
         Comment comment = Comment.create(user, subTask, commentPostRequestDto.getContent());
         commentRepository.save(comment);
+    }
+
+    public void updateComment(Long userId, CommentPatchRequestDto commentPostRequestDto) {
+        User user = userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
+
     }
 }

@@ -1,7 +1,7 @@
 package com.wedvice.comment.controller;
 
 
-import com.wedvice.comment.SubTaskNotFoundException;
+import com.wedvice.comment.dto.CommentPatchRequestDto;
 import com.wedvice.comment.dto.CommentPostRequestDto;
 import com.wedvice.comment.dto.CommentResponseDto;
 import com.wedvice.comment.service.CommentService;
@@ -12,6 +12,7 @@ import com.wedvice.couple.exception.NotMatchedYetException;
 import com.wedvice.couple.exception.PartnerNotFoundException;
 import com.wedvice.security.login.CustomUserDetails;
 import com.wedvice.security.login.LoginUser;
+import com.wedvice.subtask.exception.SubTaskNotFoundException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -64,7 +65,12 @@ public class CommentController {
 
 
     @PatchMapping
-    public ResponseEntity<ApiResponse<?>> updateComment(@LoginUser CustomUserDetails loginUser) {
+    @Operation(summary = "댓글 수정",
+        description = "comment id와 content로 댓글을 수정합니다.")
+    @DocumentedApiError(InvalidUserAccessException.class)
+    public ResponseEntity<ApiResponse<?>> updateComment(@LoginUser CustomUserDetails loginUser,
+        @RequestBody CommentPatchRequestDto commentPostRequestDto) {
+        commentService.updateComment(loginUser.getUserId(), commentPostRequestDto);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 
