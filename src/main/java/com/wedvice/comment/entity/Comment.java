@@ -14,9 +14,10 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Builder(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Comment extends BaseEntity {
 
 
@@ -39,6 +40,13 @@ public class Comment extends BaseEntity {
     private boolean deleted;
 
     // 정적 팩토리 메서드
+    @Builder(access = AccessLevel.PRIVATE)
+    private Comment(User user, SubTask subTask, String content) {
+        this.user = user;
+        this.subTask = subTask;
+        this.content = content;
+    }
+
     public static Comment create(User user, SubTask subTask, String content) {
         return Comment.builder()
             .user(user)
@@ -51,6 +59,14 @@ public class Comment extends BaseEntity {
         return user.getNickname();
     }
 
+    public Long getCommentId() {
+        return id;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
     //업데이트 메서드
     public void updateComment(String content) {
         this.content = content;
@@ -58,5 +74,9 @@ public class Comment extends BaseEntity {
 
     public void updateDeleteStatus() {
         this.deleted = true;
+    }
+
+    public boolean isAuthor(User user) {
+        return this.user.getId().equals(user.getId());
     }
 }

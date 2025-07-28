@@ -11,7 +11,6 @@ import com.wedvice.comment.entity.Comment;
 import com.wedvice.comment.exception.CommentNotFoundException;
 import com.wedvice.comment.repository.CommentRepository;
 import com.wedvice.couple.exception.InvalidUserAccessException;
-import com.wedvice.couple.repository.CoupleRepository;
 import com.wedvice.subtask.entity.SubTask;
 import com.wedvice.subtask.exception.SubTaskNotFoundException;
 import com.wedvice.subtask.repository.SubTaskRepository;
@@ -28,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommentService {
 
     private final CommentRepository commentRepository;
-    private final CoupleRepository coupleRepository;
     private final UserRepository userRepository;
     private final SubTaskRepository subTaskRepository;
 
@@ -58,18 +56,26 @@ public class CommentService {
     }
 
     public void updateComment(Long userId, CommentPatchRequestDto commentPostRequestDto) {
-        userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
-        Comment comment = commentRepository.findById(commentPostRequestDto.getCommentId())
+        User user = userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
+        Comment comment = commentRepository.findByIdAndDeletedFalse(
+                commentPostRequestDto.getCommentId())
             .orElseThrow(CommentNotFoundException::new);
 
+        if (!comment.isAuthor(user)) {
+            throw new InvalidUserAccessException();
+        }
         comment.updateComment(commentPostRequestDto.getContent());
     }
 
     public void deleteComment(Long userId, CommentDeleteRequestDto commentDeleteRequestDto) {
-        userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
-        Comment comment = commentRepository.findById(commentDeleteRequestDto.getCommentId())
+        User user = userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
+        Comment comment = commentRepository.findByIdAndDeletedFalse(
+                commentDeleteRequestDto.getCommentId())
             .orElseThrow(CommentNotFoundException::new);
 
+        if (!comment.isAuthor(user)) {
+            throw new InvalidUserAccessException();
+        }
         comment.updateDeleteStatus();
     }
 }
