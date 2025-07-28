@@ -58,18 +58,26 @@ public class CommentService {
     }
 
     public void updateComment(Long userId, CommentPatchRequestDto commentPostRequestDto) {
-        userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
-        Comment comment = commentRepository.findById(commentPostRequestDto.getCommentId())
+        User user = userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
+        Comment comment = commentRepository.findByIdAndDeletedFalse(
+                commentPostRequestDto.getCommentId())
             .orElseThrow(CommentNotFoundException::new);
 
+        if (!comment.isAuthor(user)) {
+            throw new InvalidUserAccessException();
+        }
         comment.updateComment(commentPostRequestDto.getContent());
     }
 
     public void deleteComment(Long userId, CommentDeleteRequestDto commentDeleteRequestDto) {
-        userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
-        Comment comment = commentRepository.findById(commentDeleteRequestDto.getCommentId())
+        User user = userRepository.findById(userId).orElseThrow(InvalidUserAccessException::new);
+        Comment comment = commentRepository.findByIdAndDeletedFalse(
+                commentDeleteRequestDto.getCommentId())
             .orElseThrow(CommentNotFoundException::new);
 
+        if (!comment.isAuthor(user)) {
+            throw new InvalidUserAccessException();
+        }
         comment.updateDeleteStatus();
     }
 }
