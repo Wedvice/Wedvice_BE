@@ -17,38 +17,43 @@
 
 - 핵심 기능(OAuth2, 커플 매칭) 구현 완료
 
-# 프로젝트 이미지
-
 OAuth2 소셜 로그인 (Kakao)
 
 - Spring Security 기반 OAuth2 Client 구성
 - Access/Refresh Token 발급 및 JWT 통합
 
+<br>
+회원가입 시 닉네임 유효성 검증 (Custom Validator 적용)
+<br>
+<br>
 
-- 회원가입 시 닉네임 유효성 검증 (Custom Validator 적용)
-- 커플코드 기반 매칭 기능: 초대 코드 입력 시 양방향 관계 생성
-    - `Couple` 엔티티 중심으로 `Member` 양방향 연결
-    - 예외처리: 이미 매칭된 사용자 / 잘못된 코드
+커플코드 기반 매칭 기능: 초대 코드 입력 시 양방향 관계 생성
 
+- `Couple` 엔티티 중심으로 `Member` 양방향 연결
+- 예외처리: 이미 매칭된 사용자 / 잘못된 코드
 - 마이페이지 기본 기능 구현
 
-<img width="143" height="515" alt="스크린샷 2025-09-12 오전 7 52 49" src="https://github.com/user-attachments/assets/9048e991-6694-4680-bfd7-5c0e1690b1c2" />
+# 프로젝트 이미지
+
+<br>
+
+<img width="" height="515" alt="스크린샷 2025-09-12 오전 7 52 49" src="https://github.com/user-attachments/assets/9048e991-6694-4680-bfd7-5c0e1690b1c2" />
 
 
-<img width="118" height="256" alt="스크린샷 2025-09-12 오전 7 54 25" src="https://github.com/user-attachments/assets/b4863a0c-11d5-4cf0-bebe-99d273073f9c" />
+<img width="" height="256" alt="스크린샷 2025-09-12 오전 7 54 25" src="https://github.com/user-attachments/assets/b4863a0c-11d5-4cf0-bebe-99d273073f9c" />
 
-<img width="159" height="344" alt="스크린샷 2025-09-12 오전 7 55 30" src="https://github.com/user-attachments/assets/94896167-a98e-47ef-8f4b-b73ca6ce79a4" />
-
-
-
-<img width="1084" height="364" alt="스크린샷 2025-09-12 오전 7 56 35" src="https://github.com/user-attachments/assets/8322c723-e1e2-4d3d-b9f6-b9a5be9d6801" />
-
-<img width="194" height="415" alt="스크린샷 2025-09-12 오전 7 57 19" src="https://github.com/user-attachments/assets/8ba45a8c-d7e3-4f7b-8157-59d77921c772" />
-
-<img width="433" height="445" alt="스크린샷 2025-09-12 오전 7 58 16" src="https://github.com/user-attachments/assets/8d324ed5-b991-4557-a230-b4fe4e837888" />
+<img width="" height="344" alt="스크린샷 2025-09-12 오전 7 55 30" src="https://github.com/user-attachments/assets/94896167-a98e-47ef-8f4b-b73ca6ce79a4" />
 
 
-<img width="902" height="292" alt="스크린샷 2025-09-12 오전 7 58 27" src="https://github.com/user-attachments/assets/5a0e7c49-a73c-4baf-9830-a48b81ce835b" />
+
+<img width="" height="364" alt="스크린샷 2025-09-12 오전 7 56 35" src="https://github.com/user-attachments/assets/8322c723-e1e2-4d3d-b9f6-b9a5be9d6801" />
+
+<img width="" height="415" alt="스크린샷 2025-09-12 오전 7 57 19" src="https://github.com/user-attachments/assets/8ba45a8c-d7e3-4f7b-8157-59d77921c772" />
+
+<img width="" height="445" alt="스크린샷 2025-09-12 오전 7 58 16" src="https://github.com/user-attachments/assets/8d324ed5-b991-4557-a230-b4fe4e837888" />
+
+
+<img width="" height="292" alt="스크린샷 2025-09-12 오전 7 58 27" src="https://github.com/user-attachments/assets/5a0e7c49-a73c-4baf-9830-a48b81ce835b" />
 
 # 팀원
 
