@@ -345,18 +345,15 @@ void couple_Association_WorksCorrectly() {
 @Test
 @DisplayName("Unique 제약조건: 중복된 oauthId로 저장 시도 시 예외가 발생해야 한다.")
 void oauthId_ShouldBeUnique() {
-    // Given (준비)
-    // 동일한 oauthId를 가진 두 개의 User 엔티티를 준비합니다.
+    // Given
     User user1 = User.create("same-oauth-id", "kakao");
     User user2 = User.create("same-oauth-id", "naver");
 
-    // 첫 번째 유저는 정상적으로 저장되어야 합니다.
+    // 첫 번째 유저는 정상적으로 저장
     userRepository.saveAndFlush(user1);
 
     // When & Then (실행 및 검증)
-    // 두 번째 유저를 저장하려고 할 때, DB의 unique 제약조건 위반으로 예외가 발생하는지 검증합니다.
-    // saveAndFlush()를 사용하여 즉시 DB에 INSERT 쿼리를 보내 예외 발생 시점을 명확히 합니다.
-    // 만약 User 엔티티의 oauthId 필드에 @Column(unique=true) 설정이 없다면 이 테스트는 실패합니다.
+    // 두 번째 유저를 저장하려고 할 때, DB의 unique 제약조건 위반으로 예외가 발생 검증 ( unique 제약조건 )
     assertThatThrownBy(() -> {
         userRepository.saveAndFlush(user2);
     }).isInstanceOf(DataIntegrityViolationException.class);
