@@ -469,21 +469,6 @@ class UserTest {
         @DisplayName("userConfig가 구현되었을 시")
         class withConfig {
 
-            UserConfig uc;
-
-            @BeforeEach
-            void setup() {
-                uc = UserConfig.builder()
-                    .myColor(Color.RED)
-                    .yourColor(Color.BLUE)
-                    .ourColor(Color.GREEN)
-                    .build();
-
-                user.updateRole(Role.GROOM);
-                // 연관관계 양방향 설정
-                user.assignUserConfig(uc);
-            }
-
             @Test
             @DisplayName("wedding롤이 아니면 config가 있더라도 InvalidRoleForWeddingException 에러를")
             void throwInvalidRoleForWeddingExceptionIfNotWeddingRole() {
