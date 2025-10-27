@@ -15,6 +15,33 @@
 
 **핵심 구현**: 커플 매칭 / 일정 등록 / ToDo 관리
 
+# 프로젝트 이미지
+
+<br>
+
+<img width="" height="515" alt="스크린샷 2025-09-12 오전 7 52 49" src="https://github.com/user-attachments/assets/9048e991-6694-4680-bfd7-5c0e1690b1c2" />
+
+
+<img width="" height="256" alt="스크린샷 2025-09-12 오전 7 54 25" src="https://github.com/user-attachments/assets/b4863a0c-11d5-4cf0-bebe-99d273073f9c" />
+
+<img width="" height="344" alt="스크린샷 2025-09-12 오전 7 55 30" src="https://github.com/user-attachments/assets/94896167-a98e-47ef-8f4b-b73ca6ce79a4" />
+
+
+
+<img width="" height="364" alt="스크린샷 2025-09-12 오전 7 56 35" src="https://github.com/user-attachments/assets/8322c723-e1e2-4d3d-b9f6-b9a5be9d6801" />
+
+
+
+
+<img width="" height="292" alt="스크린샷 2025-09-12 오전 7 58 27" src="https://github.com/user-attachments/assets/5a0e7c49-a73c-4baf-9830-a48b81ce835b" />
+
+# 팀원
+
+| <img src="https://github.com/user-attachments/assets/984d3041-b787-4da3-b07e-f2132411193e" width="150"> | <img src="https://github.com/user-attachments/assets/caf98b12-21c5-4396-80b5-d3054a36d33b" width="150"> |
+|:-------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------:|
+|                               [HyungGeun](https://github.com/HyungGeun94)                               |                                  [JeHyuck](https://github.com/jehyuck)                                  |
+|                                                   BE                                                    |                                                   BE                                                    |
+
 ## ⚙️ 아키텍처 및 도메인 설계
 
 ### 🧩 Main Domain Flow
@@ -22,7 +49,7 @@
            Couple ---- CoupleTask ---- Task
              ㅣ             ㅣ
              ㅣ             ㅣ
-            User          Task
+            User         SubTask
 
 - **Couple**: 두 명의 User를 연결하는 핵심 엔티티
     - 초대 코드(inviteCode)로 생성 및 매칭
@@ -76,13 +103,7 @@ public void softDeleteCoupleTasks(List<Long> taskIds, Long coupleId) {
 }
 ```
 
-- Repository는 **순수 쿼리 책임**만 가지며, 비즈니스 조립은 Service에서 처리
-- 쿼리 애너테이션 사용 , querydsl 사용
-- **Fetch Join / @BatchSize** 병행으로 N+1 최소화
--
--
-
-coupleTask 내
+💡 Repository - 순수 쿼리 책임
 
 ```java
 
@@ -121,37 +142,30 @@ public Optional<User> findUserWithCoupleAndConfigById(Long userId) {
 }
 ```
 
-- 도메인 객체는 스스로 상태를 변경하고 관리합니다 (생성, 조회, 연관관계, 비즈니스 로직)
+💡 Domain - 도메인 객체는 스스로 상태를 변경하고 관리 (생성, 조회, 연관관계, 비즈니스 로직)
 
-엔티티 생성 메서드
+생성 메서드
 
 ```java
-  // private 생성자 (빌더 패턴용)
+// private 생성자 (빌더 패턴용)
 @Builder(access = AccessLevel.PRIVATE)
-private User(String oauthId, String provider, String nickname, String profileImageUrl,
-    String memo, String refreshToken, String email, Role role) {
-    this.oauthId = oauthId;
-    this.provider = provider;
-    this.nickname = nickname;
-    this.profileImageUrl = profileImageUrl;
-    this.memo = memo;
-    this.refreshToken = refreshToken;
-    this.email = email;
-    this.role = role;
+private CoupleTask(Couple couple, Task task) {
+    this.couple = couple;
+    this.task = task;
+    this.subTasks = new ArrayList<>();
+    this.deleted = false;
 }
 
-
 // 정적 팩토리 메서드
-public static User create(String oauthId, String provider) {
-    return User.builder()
-        .oauthId(oauthId)
-        .provider(provider)
-        .role(Role.USER) // 기본 역할 유저 -> 매칭안된상태
+public static CoupleTask create(Task task, Couple couple) {
+    return CoupleTask.builder()
+        .task(task)
+        .couple(couple)
         .build();
 }
 ```
 
-엔티티 연관관계 편의 메서드
+연관관계 편의 메서드
 
 ```java
     // 연관관계 편의 메서드
@@ -269,7 +283,7 @@ void updateMemo_integration_success() throws Exception {
 }
 ```
 
-컨트롤러 슬라이스 테스ㅡㅌ
+컨트롤러 슬라이스 테스트
 
 ```java
 
@@ -383,43 +397,6 @@ void saveOrGetUser_UserExists_ReturnsExistingUserAndDoesNotSave() {
 }
 ```
 
----
-
-
-
-커플코드 기반 매칭 기능: 초대 코드 입력 시 양방향 관계 생성
-
-- `Couple` 엔티티 중심으로 `Member` 양방향 연결
-- 예외처리: 이미 매칭된 사용자 / 잘못된 코드
-- 마이페이지 기본 기능 구현
-
-# 프로젝트 이미지
-
-<br>
-
-<img width="" height="515" alt="스크린샷 2025-09-12 오전 7 52 49" src="https://github.com/user-attachments/assets/9048e991-6694-4680-bfd7-5c0e1690b1c2" />
-
-
-<img width="" height="256" alt="스크린샷 2025-09-12 오전 7 54 25" src="https://github.com/user-attachments/assets/b4863a0c-11d5-4cf0-bebe-99d273073f9c" />
-
-<img width="" height="344" alt="스크린샷 2025-09-12 오전 7 55 30" src="https://github.com/user-attachments/assets/94896167-a98e-47ef-8f4b-b73ca6ce79a4" />
-
-
-
-<img width="" height="364" alt="스크린샷 2025-09-12 오전 7 56 35" src="https://github.com/user-attachments/assets/8322c723-e1e2-4d3d-b9f6-b9a5be9d6801" />
-
-
-
-
-<img width="" height="292" alt="스크린샷 2025-09-12 오전 7 58 27" src="https://github.com/user-attachments/assets/5a0e7c49-a73c-4baf-9830-a48b81ce835b" />
-
-# 팀원
-
-| <img src="https://github.com/user-attachments/assets/984d3041-b787-4da3-b07e-f2132411193e" width="150"> | <img src="https://github.com/user-attachments/assets/caf98b12-21c5-4396-80b5-d3054a36d33b" width="150"> |
-|:-------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------:|
-|                               [HyungGeun](https://github.com/HyungGeun94)                               |                                  [JeHyuck](https://github.com/jehyuck)                                  |
-|                                                   BE                                                    |                                                   BE                                                    |
-
 # 기술 스택
 
 	• 프로그래밍 언어 및 프레임워크
@@ -439,8 +416,6 @@ void saveOrGetUser_UserExists_ReturnsExistingUserAndDoesNotSave() {
 
     • 협업 및 개발 도구 
        github, notion, discord, intelliJ
-
-# ERD / 구조도 (작성예정)
 
 # 주요 기능
 
