@@ -103,7 +103,7 @@ public void softDeleteCoupleTasks(List<Long> taskIds, Long coupleId) {
 }
 ```
 
-💡 Repository - 순수 쿼리 책임
+### 💡 Repository - 순수 쿼리 책임
 
 ```java
 
@@ -142,7 +142,7 @@ public Optional<User> findUserWithCoupleAndConfigById(Long userId) {
 }
 ```
 
-💡 Domain - 도메인 객체는 스스로 상태를 변경하고 관리 (생성, 조회, 연관관계, 비즈니스 로직)
+### 💡 Domain - 도메인 객체는 스스로 상태를 변경하고 관리 (생성, 조회, 연관관계, 비즈니스 로직)
 
 생성 메서드
 
@@ -221,13 +221,11 @@ public void initializeTasks(List<Task> tasks) {
 | Domain      | 엔티티 상태 전이 검증   | JUnit5 + AssertJ        |
 | Integration | 실제 시나리오 테스트    | @SpringBootTest         |
 
-> ✅ 테스트의 질적 성장에 집중 — “좋은 테스트 vs 나쁜 테스트” 구분 실험  
-> 실패 테스트도 개선의 일부로 기록
+> 테스트에 익숙해지는것과 옳은 방식에 집중
 
+### 🧩 대표 테스트 코드
 
-🧩 대표 테스트 코드
-
-Domain Test
+Domain Unit Test
 
 ```java
 
@@ -252,7 +250,7 @@ void shouldMatchTwoUsersToSameCouple() {
 }
 ```
 
-통합 테스트
+Integration Test
 
 ```java
 
@@ -283,7 +281,7 @@ void updateMemo_integration_success() throws Exception {
 }
 ```
 
-컨트롤러 슬라이스 테스트
+Controller Slice Test
 
 ```java
 
@@ -311,7 +309,7 @@ void updateMemo_success() throws Exception {
 }
 ```
 
-Repository Test
+Repository Slice Test
 
 ```java
 
@@ -366,7 +364,7 @@ void oauthId_ShouldBeUnique() {
 
 ```
 
-Service Test
+Service Unit Test
 
 ```java
 
@@ -424,19 +422,20 @@ void saveOrGetUser_UserExists_ReturnsExistingUserAndDoesNotSave() {
 ```
 
 ```
-함께 할 태스크 등록
+함께 할 태스크 등록 및 조회
 ```
 
-# 주요 기능 일부 상세 코드
+[//]: # (# 주요 기능 일부 상세 코드)
 
-( 작성 예정 )
+[//]: # ()
 
-# 💭회고 (후기)
+[//]: # (&#40; 작성 예정 &#41;)
 
-OAuth2 기반 인증과 커플 매칭 로직을 중심으로 서비스의 핵심 흐름을 구현했습니다.
+# 💭회고 - 형근 (후기)
+
+커플 매칭 로직 및 할 일 목록 조회를 구현했습니다.
 <br>
-<br>
-도메인 중심 설계를 적용하며, 협업 과정에서 백엔드 간의 구조적 통일성과 설계 방향에 대해 논의할 수 있던 프로젝트입니다.
+도메인 중심 설계를 적용하며 테스트 코드 적용을 해봤고, 좀 더 쿼리와 객체에 대해 알게 되는 프로젝트였습니다.
 <br>
 <br>
 비록 프로토타입 단계에서 마무리되었지만, 추후 확장을 고려한 기반 설계를 목표로 진행되었습니다.
