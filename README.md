@@ -15,6 +15,15 @@
 
 **핵심 구현**: 커플 매칭 / 일정 등록 / ToDo 관리
 
+
+# 백엔드 팀원
+
+| <img src="https://github.com/user-attachments/assets/984d3041-b787-4da3-b07e-f2132411193e" width="150"> | <img src="https://github.com/user-attachments/assets/caf98b12-21c5-4396-80b5-d3054a36d33b" width="150"> |
+|:-------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------:|
+|                               [HyungGeun](https://github.com/HyungGeun94)                               |                                  [JeHyuck](https://github.com/jehyuck)                                  |
+|                                                   BE                                                    |                                                   BE                                                    |
+
+
 # 프로젝트 이미지
 
 <br>
@@ -34,13 +43,6 @@
 
 
 <img width="" height="292" alt="스크린샷 2025-09-12 오전 7 58 27" src="https://github.com/user-attachments/assets/5a0e7c49-a73c-4baf-9830-a48b81ce835b" />
-
-# 팀원
-
-| <img src="https://github.com/user-attachments/assets/984d3041-b787-4da3-b07e-f2132411193e" width="150"> | <img src="https://github.com/user-attachments/assets/caf98b12-21c5-4396-80b5-d3054a36d33b" width="150"> |
-|:-------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------:|
-|                               [HyungGeun](https://github.com/HyungGeun94)                               |                                  [JeHyuck](https://github.com/jehyuck)                                  |
-|                                                   BE                                                    |                                                   BE                                                    |
 
 ## ⚙️ 아키텍처 및 도메인 설계
 
